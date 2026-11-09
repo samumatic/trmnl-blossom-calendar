@@ -39,6 +39,18 @@ custom_fields:
   description-de: 'Steht in der Titelleiste. Leer: Mein Kalender.'
   placeholder: Lenas Kalender
   optional: true
+- keyname: motif
+  field_type: select
+  name: Motif
+  description: 'Around the date and in the vine. Automatic: by season (daisies in spring, sunflowers and cherries in summer, maple leaves and acorns in autumn, snowflakes and holly in winter).'
+  description-de: 'Um das Datum und in der Ranke. Automatisch: nach Jahreszeit (Gänseblümchen im Frühling, Sonnenblumen und Kirschen im Sommer, Ahornblätter und Eicheln im Herbst, Schneeflocken und Stechpalme im Winter).'
+  options:
+  - Automatic: auto
+  - Spring: spring
+  - Summer: summer
+  - Autumn: autumn
+  - Winter: winter
+  default: auto
 - keyname: days_ahead
   field_type: select
   name: Days shown
@@ -74,7 +86,7 @@ custom_fields:
   name: About This Plugin
   category: calendar,personal
   github_url: https://github.com/samumatic/trmnl-blossom-calendar
-  description: 'A sweet calendar for your TRMNL: today''s date sits in a wreath of leaves and little daisies, the weekday is written in a round script, a daisy vine grows below, and your next appointments follow with a heart in front of each one. Made to look lovely in plain black and white on e-paper, with a small month view where today has a heart and busy days are underlined.<br><br><b>Setup:</b> connect your calendar with one of TRMNL''s own calendar plugins (Google Calendar, Outlook, Apple Calendar or CalDAV, which also takes any iCal link) and keep it in a playlist, hidden if you like. Give it a week layout, as a calendar plugin only shares the days its layout shows. Then pick it here, up to three at once. German or English, 24-hour or 12-hour times, three, seven or fourteen days ahead. Without a calendar it shows made-up example events.<br><br>Source code and bug reports: <a href="https://github.com/samumatic/trmnl-blossom-calendar" class="underline" target="_blank">GitHub</a>'
+  description: 'A sweet calendar for your TRMNL: today''s date sits in a wreath of leaves and little flowers that change with the seasons (daisies, sunflowers and cherries, maple leaves and acorns, snowflakes and holly), the weekday is written in a round script, a matching vine grows below, and your next appointments follow with a heart in front of each one. Made to look lovely in plain black and white on e-paper, with a small month view where today has a heart and busy days are underlined.<br><br><b>Setup:</b> connect your calendar with one of TRMNL''s own calendar plugins (Google Calendar, Outlook, Apple Calendar or CalDAV, which also takes any iCal link) and keep it in a playlist, hidden if you like. Give it a week layout, as a calendar plugin only shares the days its layout shows. Then pick it here, up to three at once. German or English, 24-hour or 12-hour times, three, seven or fourteen days ahead. Without a calendar it shows made-up example events.<br><br>Source code and bug reports: <a href="https://github.com/samumatic/trmnl-blossom-calendar" class="underline" target="_blank">GitHub</a>'
 name: Blossom Calendar
 description: Cute calendar with flowers & hearts
 refresh_interval: 60

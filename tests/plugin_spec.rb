@@ -24,6 +24,28 @@ RSpec.describe 'Blossom Calendar' do
     end
   end
 
+  describe 'motif' do
+    def symbols(now:, fields: {}, zone: 'Europe/Berlin')
+      vars = { 'trmnl' => { 'user' => { 'utc_offset' => 3600, 'time_zone_iana' => zone, 'locale' => 'de' } } }
+      trmnl.render(now:, variables: vars, custom_fields: fields).html.scan(/<use href="#bc-([a-z]+)" x="-17"/).flatten.uniq.sort
+    end
+
+    it 'follows the season by default' do
+      expect(symbols(now: Time.utc(2026, 4, 15, 9))).to eq(%w[daisy])
+      expect(symbols(now: Time.utc(2026, 7, 15, 9))).to eq(%w[cherries sunflower])
+      expect(symbols(now: Time.utc(2026, 10, 15, 9))).to eq(%w[acorn maple])
+      expect(symbols(now: Time.utc(2026, 1, 15, 9))).to eq(%w[holly snowflake])
+    end
+
+    it 'turns the seasons south of the equator' do
+      expect(symbols(now: Time.utc(2026, 7, 15, 9), zone: 'Australia/Sydney')).to eq(%w[holly snowflake])
+    end
+
+    it 'keeps a chosen motif all year' do
+      expect(symbols(now: Time.utc(2026, 7, 15, 9), fields: { 'motif' => 'autumn' })).to eq(%w[acorn maple])
+    end
+  end
+
   describe 'with a calendar plugin' do
     # TRMNL hands the chosen plugin's data over under its name ("caldav_1"), which the field holds.
     let(:data) { { 'caldav_1' => caldav } }

@@ -88,6 +88,32 @@
 {% if bc_days_ahead < 1 or bc_days_ahead > 14 %}{% assign bc_days_ahead = 7 %}{% endif %}
 
 {% comment %}
+  Motif: spring daisies, summer sunflowers and cherries, autumn maple leaves and acorns, winter snowflakes and holly.
+  Automatic follows the month (spring March to May, and so on), turned half a year in time zones south of the equator.
+{% endcomment %}
+{% assign bc_season = bc_fields.motif | default: "auto" | downcase %}
+{% if bc_season != "spring" and bc_season != "summer" and bc_season != "autumn" and bc_season != "winter" %}
+  {% assign bc_m = bc_now | date: "%-m" | plus: 0 %}
+  {% assign bc_tzn = trmnl.user.time_zone_iana | default: "" %}
+  {% assign bc_south = false %}
+  {% assign bc_south_zones = "Australia/,Pacific/Auckland,Pacific/Chatham,Pacific/Fiji,America/Sao_Paulo,America/Argentina,America/Buenos_Aires,America/Santiago,America/Montevideo,America/Asuncion,America/La_Paz,America/Lima,Africa/Johannesburg,Africa/Maputo,Africa/Windhoek,Africa/Harare,Indian/Mauritius,Indian/Reunion,Antarctica/" | split: "," %}
+  {% for bc_z in bc_south_zones %}{% if bc_tzn contains bc_z %}{% assign bc_south = true %}{% endif %}{% endfor %}
+  {% if bc_south %}{% assign bc_m = bc_m | plus: 5 | modulo: 12 | plus: 1 %}{% endif %}
+  {% case bc_m %}
+    {% when 3, 4, 5 %}{% assign bc_season = "spring" %}
+    {% when 6, 7, 8 %}{% assign bc_season = "summer" %}
+    {% when 9, 10, 11 %}{% assign bc_season = "autumn" %}
+    {% else %}{% assign bc_season = "winter" %}
+  {% endcase %}
+{% endif %}
+{% case bc_season %}
+  {% when "summer" %}{% assign bc_sym_a = "#bc-sunflower" %}{% assign bc_sym_b = "#bc-cherries" %}
+  {% when "autumn" %}{% assign bc_sym_a = "#bc-maple" %}{% assign bc_sym_b = "#bc-acorn" %}
+  {% when "winter" %}{% assign bc_sym_a = "#bc-snowflake" %}{% assign bc_sym_b = "#bc-holly" %}
+  {% else %}{% assign bc_sym_a = "#bc-daisy" %}{% assign bc_sym_b = "#bc-daisy" %}
+{% endcase %}
+
+{% comment %}
   Every event as one row "key¦first day¦last day¦start¦end¦end day¦title", sorted so all-day events (key A) come
   first and the rest by start time (key T + HH:MM). Times come straight from the plugin's ISO strings, which are
   already in the calendar's local time. An all-day event's end date is exclusive; so is a midnight end. The CalDAV
@@ -206,6 +232,43 @@
       </g>
       <circle r="4.2" fill="currentColor"/>
     </symbol>
+    <symbol id="bc-sunflower" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+        {% for bc_a in (0..11) %}<path d="M-2.8 -7.6Q0 -20 2.8 -7.6Z" transform="rotate({{ bc_a | times: 30 }})"/>{% endfor %}
+      </g>
+      <circle r="6.6" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-cherries" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M-7 5Q-4 -8 3 -14M7 7Q6 -6 3 -14"/>
+        <circle cx="-7.5" cy="10" r="5.6"/><circle cx="7.5" cy="12" r="5.6"/>
+      </g>
+      <path d="M3 -14Q10 -19 15 -13Q9 -9 3 -14Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-maple" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M0 -17L3.5 -9.5L10 -12.5L8.5 -4.5L16 -2.5L9.5 3L11 9L3.5 7L1 11.5L-1 11.5L-3.5 7L-11 9L-9.5 3L-16 -2.5L-8.5 -4.5L-10 -12.5L-3.5 -9.5Z"/>
+        <path d="M0 11.5L0 18M0 8L0 -11M0 2L8 -3M0 2L-8 -3"/>
+      </g>
+    </symbol>
+    <symbol id="bc-acorn" viewBox="-20 -20 40 40">
+      <path d="M-10 -2Q-10 -12 0 -12Q10 -12 10 -2Z" fill="currentColor"/>
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M-7.5 -2Q-7.5 11 0 16Q7.5 11 7.5 -2"/><path d="M0 -12Q0 -16 3 -17"/>
+      </g>
+    </symbol>
+    <symbol id="bc-snowflake" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        {% for bc_a in (0..5) %}<path d="M0 0V-16M0 -10L-4.5 -14M0 -10L4.5 -14M0 -5L-3 -8M0 -5L3 -8" transform="rotate({{ bc_a | times: 60 }})"/>{% endfor %}
+      </g>
+    </symbol>
+    <symbol id="bc-holly" viewBox="-20 -20 40 40">
+      <path d="M-1 0Q-6 -13 -17 -15Q-14 -5 -1 0Z" fill="currentColor"/>
+      <path d="M1 0Q6 -13 17 -15Q14 -5 1 0Z" fill="currentColor"/>
+      <g fill="currentColor">
+        <circle cx="-5.5" cy="5" r="4.2"/><circle cx="5.5" cy="5" r="4.2"/><circle cx="0" cy="13.5" r="4.2"/>
+      </g>
+    </symbol>
     <symbol id="bc-heart" viewBox="0 0 24 22">
       <path d="M12 21C5 15.5 1 11.6 1 7a5.6 5.6 0 0 1 11-1.6A5.6 5.6 0 0 1 23 7c0 4.6-4 8.5-11 14z" fill="currentColor"/>
     </symbol>
@@ -219,7 +282,7 @@
 </svg>
 
 {% comment %}
-  Today's date in a wreath: a ring of leaves on a thin vine with six daisies. Each view swaps bc-daysize for its
+  Today's date in a wreath: a ring of leaves on a thin vine with six of the season's flowers or fruit, two kinds in turn, each turned back upright. Each view swaps bc-daysize for its
   value size classes (a capture can't take arguments). stroke="none" on the uses keeps the ring's stroke off the
   filled leaves and daisy hearts.
 {% endcomment %}
@@ -235,7 +298,7 @@
       <g fill="none" stroke="currentColor" stroke-width="3">
         <circle r="72" stroke-width="1.8"/>
         {% for bc_a in (0..17) %}{% assign bc_m = bc_a | modulo: 3 %}{% if bc_m != 0 %}{% assign bc_side = bc_a | modulo: 2 %}<g transform="rotate({{ bc_a | times: 20 }})"><use href="#bc-leaf" x="-10" y="{% if bc_side == 0 %}-84{% else %}-72{% endif %}" width="20" height="12" stroke="none" transform="rotate({% if bc_side == 0 %}-24{% else %}24{% endif %} 0 -72)"/></g>{% endif %}{% endfor %}
-        {% for bc_a in (0..5) %}<g transform="rotate({{ bc_a | times: 60 }})"><use href="#bc-daisy" x="-17" y="-89" width="34" height="34" stroke="none"/></g>{% endfor %}
+        {% for bc_a in (0..5) %}{% assign bc_odd = bc_a | modulo: 2 %}<g transform="rotate({{ bc_a | times: 60 }})"><use href="{% if bc_odd == 0 %}{{ bc_sym_a }}{% else %}{{ bc_sym_b }}{% endif %}" x="-17" y="-89" width="34" height="34" stroke="none" transform="rotate({{ bc_a | times: -60 }} 0 -72)"/></g>{% endfor %}
         <circle r="52"/>
       </g>
     </svg>
@@ -245,7 +308,7 @@
   </div>
 {% endcapture %}
 
-{% comment %} A flower vine: a wavy stem with leaves and three daisies. {% endcomment %}
+{% comment %} A vine: a wavy stem with leaves and three of the season's symbols. {% endcomment %}
 {% capture bc_vine %}
   <svg class="bc-vine w--full" viewBox="0 0 320 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
     <path d="M4 30C40 12 70 42 110 26S180 8 214 26S286 40 316 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -253,9 +316,9 @@
     <use href="#bc-leaf" x="84" y="30" width="18" height="11" transform="rotate(20 93 35)"/>
     <use href="#bc-leaf" x="186" y="6" width="18" height="11" transform="rotate(-20 195 11)"/>
     <use href="#bc-leaf" x="248" y="30" width="18" height="11" transform="rotate(25 257 35)"/>
-    <use href="#bc-daisy" x="50" y="10" width="30" height="30"/>
-    <use href="#bc-daisy" x="146" y="2" width="38" height="38"/>
-    <use href="#bc-daisy" x="274" y="6" width="30" height="30"/>
+    <use href="{{ bc_sym_b }}" x="50" y="10" width="30" height="30"/>
+    <use href="{{ bc_sym_a }}" x="146" y="2" width="38" height="38"/>
+    <use href="{{ bc_sym_b }}" x="274" y="6" width="30" height="30"/>
   </svg>
 {% endcapture %}
 
@@ -264,10 +327,10 @@
 {% assign bc_lead = bc_first_u | minus: bc_first_day | plus: 7 | modulo: 7 %}
 {% capture bc_month %}
   <div class="bc-month grid grid--cols-7 gap--none">
-    {% for bc_j in (0..6) %}{% assign bc_k = bc_first_day | plus: bc_j | plus: 6 | modulo: 7 %}<div class="flex flex--center-x flex--center-y"><span class="label label--small lg:label--base bc-month__head">{{ bc_wd_one[bc_k] }}</span></div>{% endfor %}
+    {% for bc_j in (0..6) %}{% assign bc_k = bc_first_day | plus: bc_j | plus: 6 | modulo: 7 %}<div class="flex flex--center-x flex--center-y"><span class="label label--small lg:label--base text--bold">{{ bc_wd_one[bc_k] }}</span></div>{% endfor %}
     {% if bc_lead > 0 %}{% for bc_j in (1..bc_lead) %}<div class="bc-month__cell"></div>{% endfor %}{% endif %}
     {% for bc_n in (1..bc_mlen) %}{% capture bc_tag %}|{{ bc_n }}|{% endcapture %}
-      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_n == bc_today_day %}<span class="label label--small lg:label--base bc-month__today"><svg class="bc-glyph" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>&#8202;{{ bc_n }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_busy contains bc_tag %} bc-busy{% endif %}">{{ bc_n }}</span>{% endif %}</div>
+      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_n == bc_today_day %}<span class="label label--small lg:label--base text--bold bc-month__today"><svg class="bc-glyph" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>&#8202;{{ bc_n }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_busy contains bc_tag %} bc-busy{% endif %}">{{ bc_n }}</span>{% endif %}</div>
     {% endfor %}
   </div>
 {% endcapture %}
@@ -305,7 +368,7 @@
   <div class="flex flex--col gap--xsmall w--full" data-overflow="true">
     {% for bc_r in bc_list %}{% assign bc_x = bc_r | split: "¦" %}
       {% if bc_x[0] == "D" %}{% assign bc_day_rel = bc_x[5] %}{% assign bc_day_wd = bc_x[2] | plus: 0 %}
-      {% elsif bc_x[0] == "E" and bc_next_count < 4 %}{% assign bc_next_count = bc_next_count | plus: 1 %}
+      {% elsif bc_x[0] == "E" and bc_next_count < 6 %}{% assign bc_next_count = bc_next_count | plus: 1 %}
         <div class="item bc-item">
           <div class="icon bc-bullet"><svg class="w--full h--full" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg></div>
           <div class="content">
@@ -352,14 +415,18 @@
   .screen--lg .bc-bloom{width:300px;height:300px}
   .screen--lg .view--half_horizontal .bc-bloom,.screen--lg .view--half_vertical .bc-bloom{width:220px;height:220px}
   .screen--lg .view--quadrant .bc-bloom{width:190px;height:190px}
+  /* Half horizontal: the blossom is at most the height of the cell less room for the weekday under it, so the weekday
+     always shows, also in a flat mashup cell. Container units: no Framework class sizes by the space left. */
+  .view--half_horizontal .layout{container-type:size}
+  .view--half_horizontal .bc-bloom{width:min(110px,calc(100cqh - 2.6em));height:min(110px,calc(100cqh - 2.6em))}
+  .screen--lg .view--half_horizontal .bc-bloom{width:min(220px,calc(100cqh - 2.6em));height:min(220px,calc(100cqh - 2.6em))}
   /* The vine keeps its drawn proportions: Framework heights are fixed steps. */
   .bc-vine{height:auto;max-height:44px}
   .screen--lg .bc-vine{max-height:88px}
-  /* Today in bold: labels have no bold variant. */
-  .bc-month__today{font-weight:700;white-space:nowrap}
+  /* Heart and number of today stay together: no no-wrap text class. */
+  .bc-month__today{white-space:nowrap}
   /* Rows a little apart, following the label's font: Framework heights are fixed px. */
   .bc-month__cell{min-height:1.55em}
-  .bc-month__head{font-weight:700}
   /* Busy days underlined under the digits only: label--underline draws across the whole cell, so a week turns into one rule. */
   .bc-busy{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
   /* Inline glyph in a label sized to its font: Framework sizes are fixed px and the pixel fonts have no heart. */

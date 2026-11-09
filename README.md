@@ -2,7 +2,7 @@
 
 # Blossom Calendar
 
-A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date in a wreath of leaves and daisies, the weekday in a round script, a daisy vine, and the coming appointments with a heart in front of each one. Drawn in plain black and white, so it looks lovely on 1-bit screens too.
+A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date in a wreath of leaves and seasonal flowers, the weekday in a round script, a matching vine, and the coming appointments with a heart in front of each one. Drawn in plain black and white, so it looks lovely on 1-bit screens too.
 
 ![Full layout](docs/full.png)
 
@@ -14,11 +14,16 @@ A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date i
 |---|---|
 | ![Half horizontal](docs/half_horizontal.png) | ![Quadrant](docs/quadrant.png) |
 
+## Seasons
+
+![The four motifs: spring, summer, autumn, winter](docs/seasons.png)
+
 ## Features
 
-- Today's date in a wreath of leaves and six daisies, the weekday in [Pacifico](https://fonts.google.com/specimen/Pacifico) script
+- Today's date in a wreath of leaves with the season's flowers, the weekday in [Pacifico](https://fonts.google.com/specimen/Pacifico) script
+- Four motifs that change with the seasons, or one picked for good: daisies in spring, sunflowers and cherries in summer, maple leaves and acorns in autumn, snowflakes and holly in winter (turned half a year south of the equator)
 - The month at a glance: today with a little heart in front, days with something on are underlined
-- A daisy vine, and a heart in front of every event
+- A vine with the same motif, and a heart in front of every event
 - Agenda for the next 3, 7 or 14 days: times, all-day events, multi-day events ("Day 2 of 3"), events past midnight; what already ended today drops off
 - Your calendar from TRMNL's own calendar plugins (Google Calendar, Outlook, Apple Calendar, CalDAV with any iCal link), up to three at once
 - German or English (or follow the TRMNL account language), 24-hour or 12-hour times (or as the calendar plugin shows them), the plugin's first day of the week
