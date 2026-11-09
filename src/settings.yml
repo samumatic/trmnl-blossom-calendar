@@ -3,16 +3,71 @@ strategy: plugin_merge
 no_screen_padding: 'no'
 dark_mode: 'no'
 static_data: ''
-polling_verb: get
-framework_version: 3.4.6
-serverless_language: ''
-refresh_interval_floor: ''
-polling_url: ''
-polling_headers: ''
-polling_body: ''
+framework_version: latest
+refresh_interval_floor: '15'
 id: 536455
-oauth_enabled: 'false'
-oauth_pkce_enabled: 'no'
+custom_fields:
+- keyname: calendar_1
+  field_type: plugin_instance_select
+  name: Calendar
+  description: 'One of your TRMNL calendar plugins (Google, Outlook, Apple, CalDAV). Keep it in a playlist so it keeps refreshing; hide it there if it shouldn''t show on its own. It shares the days its own layout shows: pick a week layout there for the whole week. Empty: example events.'
+  description-de: 'Eines deiner TRMNL-Kalender-Plugins (Google, Outlook, Apple, CalDAV). Lass es in einer Playlist, damit es aktuell bleibt; blende es dort aus, wenn es nicht selbst erscheinen soll. Es teilt nur die Tage, die sein eigenes Layout zeigt: dort ein Wochen-Layout wählen. Leer: Beispieltermine.'
+  optional: true
+- keyname: calendar_2
+  field_type: plugin_instance_select
+  name: Calendar 2
+  description: 'Optional: another calendar plugin, shown together with the first.'
+  description-de: 'Optional: ein weiteres Kalender-Plugin, zusammen mit dem ersten angezeigt.'
+  optional: true
+- keyname: calendar_3
+  field_type: plugin_instance_select
+  name: Calendar 3
+  description: 'Optional: a third calendar plugin.'
+  description-de: 'Optional: ein drittes Kalender-Plugin.'
+  optional: true
+- keyname: calendar_name
+  field_type: string
+  name: Title
+  description: 'Shown in the title bar. Empty: My calendar.'
+  description-de: 'Steht in der Titelleiste. Leer: Mein Kalender.'
+  placeholder: Lenas Kalender
+  optional: true
+- keyname: days_ahead
+  field_type: select
+  name: Days shown
+  description: How many days the agenda looks ahead.
+  description-de: Wie viele Tage die Terminliste vorausschaut.
+  options:
+  - '3': '3'
+  - '7': '7'
+  - '14': '14'
+  default: '7'
+- keyname: language
+  field_type: select
+  name: Language
+  description: Auto follows the language of your TRMNL account.
+  description-de: Auto folgt der Sprache deines TRMNL-Kontos.
+  options:
+  - Auto: auto
+  - Deutsch: de
+  - English: en
+  default: auto
+- keyname: time_format
+  field_type: select
+  name: Time format
+  description: 'Auto: as your calendar plugin shows times, else 24-hour in German, 12-hour in English.'
+  description-de: 'Auto: wie dein Kalender-Plugin die Zeiten zeigt, sonst 24 Stunden auf Deutsch, 12 Stunden auf Englisch.'
+  options:
+  - Auto: auto
+  - 24-hour: '24'
+  - 12-hour: '12'
+  default: auto
+- keyname: about
+  field_type: author_bio
+  name: About This Plugin
+  category: calendar,personal
+  github_url: https://github.com/samumatic/trmnl-blossom-calendar
+  description: 'A sweet calendar for your TRMNL: today''s date sits in a wreath of leaves and little daisies, the weekday is written in a round script, a daisy vine grows below, and your next appointments follow with a heart in front of each one. Made to look lovely in plain black and white on e-paper, with a small month view where today is a heart and busy days are underlined.<br><br><b>Setup:</b> connect your calendar with one of TRMNL''s own calendar plugins (Google Calendar, Outlook, Apple Calendar or CalDAV, which also takes any iCal link) and keep it in a playlist, hidden if you like. Give it a week layout, as a calendar plugin only shares the days its layout shows. Then pick it here, up to three at once. German or English, 24-hour or 12-hour times, three, seven or fourteen days ahead. Without a calendar it shows made-up example events.<br><br>Source code and bug reports: <a href="https://github.com/samumatic/trmnl-blossom-calendar" class="underline" target="_blank">GitHub</a>'
 name: Blossom Calendar
-description:
-refresh_interval:
+description: Cute calendar with flowers & hearts
+refresh_interval: 60
