@@ -17,7 +17,7 @@ A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date i
 ## Features
 
 - Today's date in a wreath of leaves and six daisies, the weekday in [Pacifico](https://fonts.google.com/specimen/Pacifico) script
-- The month at a glance: today sits in a heart, days with something on are underlined
+- The month at a glance: today with a little heart in front, days with something on are underlined
 - A daisy vine, and a heart in front of every event
 - Agenda for the next 3, 7 or 14 days: times, all-day events, multi-day events ("Day 2 of 3"), events past midnight; what already ended today drops off
 - Your calendar from TRMNL's own calendar plugins (Google Calendar, Outlook, Apple Calendar, CalDAV with any iCal link), up to three at once

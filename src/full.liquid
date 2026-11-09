@@ -3,7 +3,7 @@
   <div class="bc-card flex flex--col portrait:flex--row flex--center-x gap--small portrait:gap--large flex-none">
     <div class="flex flex--col flex--center-x gap--xsmall flex-none">
       <span class="title lg:title--xlarge bc-script">{{ bc_weekday }}</span>
-      {{ bc_bloom | replace: "bc-daysize", "value--xlarge lg:value--xxxlarge" }}
+      {{ bc_bloom | replace: "bc-daysize", bc_ds_big }}
       <span class="label lg:label--large">{{ bc_month_year }}</span>
     </div>
     <div class="flex flex--col gap--small grow bc-card__side">

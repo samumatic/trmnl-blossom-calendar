@@ -223,6 +223,12 @@
   value size classes (a capture can't take arguments). stroke="none" on the uses keeps the ring's stroke off the
   filled leaves and daisy hearts.
 {% endcomment %}
+{% comment %} Two digits get a size smaller, so "28" stays inside the inner circle. {% endcomment %}
+{% if bc_today_day > 9 %}
+  {% assign bc_ds_big = "value--large lg:value--xxlarge" %}{% assign bc_ds_small = "value--medium lg:value--xlarge" %}
+{% else %}
+  {% assign bc_ds_big = "value--xlarge lg:value--xxxlarge" %}{% assign bc_ds_small = "value--large lg:value--xxlarge" %}
+{% endif %}
 {% capture bc_bloom %}
   <div class="bc-bloom relative flex-none">
     <svg class="absolute inset--0 w--full h--full" viewBox="-100 -100 200 200" aria-hidden="true">
@@ -230,7 +236,7 @@
         <circle r="72" stroke-width="1.8"/>
         {% for bc_a in (0..17) %}{% assign bc_m = bc_a | modulo: 3 %}{% if bc_m != 0 %}{% assign bc_side = bc_a | modulo: 2 %}<g transform="rotate({{ bc_a | times: 20 }})"><use href="#bc-leaf" x="-10" y="{% if bc_side == 0 %}-84{% else %}-72{% endif %}" width="20" height="12" stroke="none" transform="rotate({% if bc_side == 0 %}-24{% else %}24{% endif %} 0 -72)"/></g>{% endif %}{% endfor %}
         {% for bc_a in (0..5) %}<g transform="rotate({{ bc_a | times: 60 }})"><use href="#bc-daisy" x="-17" y="-89" width="34" height="34" stroke="none"/></g>{% endfor %}
-        <circle r="46"/>
+        <circle r="52"/>
       </g>
     </svg>
     <div class="absolute inset--0 flex flex--col flex--center">
@@ -253,7 +259,7 @@
   </svg>
 {% endcapture %}
 
-{% comment %} This month, starting on the calendar plugin's first day of the week: today sits in a heart, days with something on are underlined. {% endcomment %}
+{% comment %} This month, starting on the calendar plugin's first day of the week: today is bold with a small heart in front, days with something on are underlined. {% endcomment %}
 {% assign bc_first_u = bc_ms_ts | date: "%u" | modulo: 7 %}
 {% assign bc_lead = bc_first_u | minus: bc_first_day | plus: 7 | modulo: 7 %}
 {% capture bc_month %}
@@ -261,7 +267,7 @@
     {% for bc_j in (0..6) %}{% assign bc_k = bc_first_day | plus: bc_j | plus: 6 | modulo: 7 %}<div class="flex flex--center-x flex--center-y"><span class="label label--small lg:label--base bc-month__head">{{ bc_wd_one[bc_k] }}</span></div>{% endfor %}
     {% if bc_lead > 0 %}{% for bc_j in (1..bc_lead) %}<div class="bc-month__cell"></div>{% endfor %}{% endif %}
     {% for bc_n in (1..bc_mlen) %}{% capture bc_tag %}|{{ bc_n }}|{% endcapture %}
-      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_n == bc_today_day %}<span class="label label--small lg:label--base relative bc-month__today"><svg class="bc-month__heart absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg>{{ bc_n }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_busy contains bc_tag %} bc-busy{% endif %}">{{ bc_n }}</span>{% endif %}</div>
+      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_n == bc_today_day %}<span class="label label--small lg:label--base bc-month__today"><svg class="bc-glyph" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>&#8202;{{ bc_n }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_busy contains bc_tag %} bc-busy{% endif %}">{{ bc_n }}</span>{% endif %}</div>
     {% endfor %}
   </div>
 {% endcapture %}
@@ -349,11 +355,9 @@
   /* The vine keeps its drawn proportions: Framework heights are fixed steps. */
   .bc-vine{height:auto;max-height:44px}
   .screen--lg .bc-vine{max-height:88px}
-  /* Month grid: today's heart is a cell of the grid's own height; no square-cell utility. */
-  /* Today's heart centred behind the number, sized to the label's font: no centring transform or em sizes in the Framework. */
-  .bc-month__heart{width:1.9em;height:1.75em;left:50%;top:50%;transform:translate(-50%,-50%)}
-  .bc-month__today{font-weight:700}
-  /* Rows tall enough for today's heart: Framework heights are fixed px, the heart follows the label's font. */
+  /* Today in bold: labels have no bold variant. */
+  .bc-month__today{font-weight:700;white-space:nowrap}
+  /* Rows a little apart, following the label's font: Framework heights are fixed px. */
   .bc-month__cell{min-height:1.55em}
   .bc-month__head{font-weight:700}
   /* Busy days underlined under the digits only: label--underline draws across the whole cell, so a week turns into one rule. */

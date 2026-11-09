@@ -56,9 +56,9 @@ RSpec.describe 'Blossom Calendar' do
 
     it 'marks busy days of the month and today' do
       h = html
-      %w[9 10 12 13 14 16 27].each { |d| expect(h).to include(%(bc-busy">#{d}<)).or include(%(</svg>#{d}</span>)) }
+      %w[10 12 13 14 16 27].each { |d| expect(h).to include(%(bc-busy">#{d}<)) }
       expect(h).not_to include('bc-busy">11<')
-      expect(h).to include('bc-month__today')
+      expect(h).to match(%r{bc-month__today">.*?</svg>\S*9</span>})
     end
 
     it 'follows the plugin\'s 12-hour clock and week start' do
