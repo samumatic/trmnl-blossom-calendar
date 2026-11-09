@@ -20,6 +20,7 @@ A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date i
 
 - Today's date in a wreath of leaves with the season's flowers, the weekday in [Pacifico](https://fonts.google.com/specimen/Pacifico) script
 - Four motifs that change with the seasons, or one picked for good: daisies in spring, sunflowers and cherries in summer, maple leaves and acorns in autumn, snowflakes and holly in winter (turned half a year south of the equator)
+- Holiday decoration, on unless switched off: stars and candles from 1 to 26 December, eggs and bunnies from the Monday before Easter to Easter Monday (Western Easter, worked out for every year)
 - The month at a glance: today with a little heart in front, days with something on are underlined
 - A vine with the same motif, and a heart in front of every event
 - Agenda for the next 3, 7 or 14 days: times, all-day events, multi-day events ("Day 2 of 3"), events past midnight; what already ended today drops off

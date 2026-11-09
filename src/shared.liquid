@@ -106,7 +106,32 @@
     {% else %}{% assign bc_season = "winter" %}
   {% endcase %}
 {% endif %}
+{% comment %}
+  Holiday decoration (on unless switched off), over any motif: Advent and Christmas from 1 to 26 December with stars
+  and candles (no snow, so it suits the southern summer too), and Easter from the Monday before to Easter Monday with
+  eggs and bunnies. Western Easter Sunday by the anonymous Gregorian algorithm (Meeus/Jones/Butcher).
+{% endcomment %}
+{% assign bc_holidays = bc_fields.holidays | default: "true" | append: "" | downcase %}
+{% if bc_holidays != "false" %}
+  {% assign bc_mm = bc_now | date: "%-m" | plus: 0 %}{% assign bc_dd = bc_now | date: "%-d" | plus: 0 %}
+  {% if bc_mm == 12 and bc_dd <= 26 %}{% assign bc_season = "christmas" %}{% endif %}
+  {% assign bc_y = bc_now | date: "%Y" | plus: 0 %}
+  {% assign bc_ea = bc_y | modulo: 19 %}{% assign bc_eb = bc_y | divided_by: 100 %}{% assign bc_ec = bc_y | modulo: 100 %}
+  {% assign bc_ed = bc_eb | divided_by: 4 %}{% assign bc_ee = bc_eb | modulo: 4 %}
+  {% assign bc_ef = bc_eb | plus: 8 | divided_by: 25 %}{% assign bc_eg = bc_eb | minus: bc_ef | plus: 1 | divided_by: 3 %}
+  {% assign bc_eh = bc_ea | times: 19 | plus: bc_eb | minus: bc_ed | minus: bc_eg | plus: 15 | modulo: 30 %}
+  {% assign bc_ei = bc_ec | divided_by: 4 %}{% assign bc_ek = bc_ec | modulo: 4 %}
+  {% assign bc_el = bc_ee | times: 2 | plus: 32 | plus: bc_ei | plus: bc_ei | minus: bc_eh | minus: bc_ek | modulo: 7 %}
+  {% assign bc_l22 = bc_el | times: 22 %}{% assign bc_em = bc_eh | times: 11 | plus: bc_ea | plus: bc_l22 | divided_by: 451 %}
+  {% assign bc_m7 = bc_em | times: 7 %}{% assign bc_en = bc_eh | plus: bc_el | minus: bc_m7 | plus: 114 %}
+  {% assign bc_emonth = bc_en | divided_by: 31 %}{% assign bc_eday = bc_en | modulo: 31 | plus: 1 %}
+  {% capture bc_easter %}{{ bc_y }}-{% if bc_emonth < 10 %}0{% endif %}{{ bc_emonth }}-{% if bc_eday < 10 %}0{% endif %}{{ bc_eday }}T12:00:00Z{% endcapture %}
+  {% assign bc_easter_days = bc_easter | date: "%s" | plus: 0 | minus: bc_today_ts | divided_by: 86400 %}
+  {% if bc_easter_days <= 6 and bc_easter_days >= -1 %}{% assign bc_season = "easter" %}{% endif %}
+{% endif %}
 {% case bc_season %}
+  {% when "christmas" %}{% assign bc_sym_a = "#bc-star" %}{% assign bc_sym_b = "#bc-candle" %}
+  {% when "easter" %}{% assign bc_sym_a = "#bc-egg" %}{% assign bc_sym_b = "#bc-bunny" %}
   {% when "summer" %}{% assign bc_sym_a = "#bc-sunflower" %}{% assign bc_sym_b = "#bc-cherries" %}
   {% when "autumn" %}{% assign bc_sym_a = "#bc-maple" %}{% assign bc_sym_b = "#bc-acorn" %}
   {% when "winter" %}{% assign bc_sym_a = "#bc-snowflake" %}{% assign bc_sym_b = "#bc-holly" %}
@@ -268,6 +293,32 @@
       <g fill="currentColor">
         <circle cx="-5.5" cy="5" r="4.2"/><circle cx="5.5" cy="5" r="4.2"/><circle cx="0" cy="13.5" r="4.2"/>
       </g>
+    </symbol>
+    <symbol id="bc-star" viewBox="-20 -20 40 40">
+      <path d="M0 -16L4.2 -4.8L16.2 -4.3L6.8 3.2L10 14.8L0 8.2L-10 14.8L-6.8 3.2L-16.2 -4.3L-4.2 -4.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cy="1" r="2.6" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-candle" viewBox="-20 -20 40 40">
+      <path d="M0 -18Q5.5 -11 0 -6.5Q-5.5 -11 0 -18Z" fill="currentColor"/>
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 -6.5V-3.5"/><rect x="-5" y="-3.5" width="10" height="19" rx="1.5"/><path d="M-11 16H11"/>
+      </g>
+    </symbol>
+    <symbol id="bc-egg" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <path d="M0 -16C8 -16 12 -3 12 4C12 11 7 16 0 16C-7 16 -12 11 -12 4C-12 -3 -8 -16 0 -16Z"/>
+        <path d="M-11.5 2L-7.5 -2L-3.5 2L0.5 -2L4.5 2L8.5 -2L11.5 1"/>
+      </g>
+      <circle cx="-5" cy="9" r="1.8" fill="currentColor"/><circle cx="1" cy="10" r="1.8" fill="currentColor"/><circle cx="6.5" cy="8" r="1.8" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-bunny" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+        <ellipse cx="-5" cy="-9" rx="3.6" ry="8.5" transform="rotate(-12 -5 -9)"/>
+        <ellipse cx="5" cy="-9" rx="3.6" ry="8.5" transform="rotate(12 5 -9)"/>
+        <circle cy="8" r="8.6"/>
+      </g>
+      <circle cx="-3.2" cy="6.5" r="1.4" fill="currentColor"/><circle cx="3.2" cy="6.5" r="1.4" fill="currentColor"/>
+      <path d="M-1.6 10H1.6L0 11.8Z" fill="currentColor"/>
     </symbol>
     <symbol id="bc-heart" viewBox="0 0 24 22">
       <path d="M12 21C5 15.5 1 11.6 1 7a5.6 5.6 0 0 1 11-1.6A5.6 5.6 0 0 1 23 7c0 4.6-4 8.5-11 14z" fill="currentColor"/>

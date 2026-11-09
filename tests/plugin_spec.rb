@@ -41,6 +41,24 @@ RSpec.describe 'Blossom Calendar' do
       expect(symbols(now: Time.utc(2026, 7, 15, 9), zone: 'Australia/Sydney')).to eq(%w[holly snowflake])
     end
 
+    it 'decorates Advent and Christmas, then goes back to winter' do
+      expect(symbols(now: Time.utc(2026, 12, 1, 9))).to eq(%w[candle star])
+      expect(symbols(now: Time.utc(2026, 12, 26, 9))).to eq(%w[candle star])
+      expect(symbols(now: Time.utc(2026, 12, 27, 9))).to eq(%w[holly snowflake])
+    end
+
+    it 'decorates the week around Easter, which moves every year' do
+      expect(symbols(now: Time.utc(2027, 3, 21, 9))).to eq(%w[daisy])             # Palm Sunday 2027: not yet
+      expect(symbols(now: Time.utc(2027, 3, 22, 9))).to eq(%w[bunny egg])       # Monday of Holy Week
+      expect(symbols(now: Time.utc(2027, 3, 29, 9))).to eq(%w[bunny egg])       # Easter Monday
+      expect(symbols(now: Time.utc(2027, 3, 30, 9))).to eq(%w[daisy])
+      expect(symbols(now: Time.utc(2026, 4, 5, 9))).to eq(%w[bunny egg])        # Easter Sunday 2026
+    end
+
+    it 'leaves the holidays out when switched off' do
+      expect(symbols(now: Time.utc(2026, 12, 10, 9), fields: { 'holidays' => 'false' })).to eq(%w[holly snowflake])
+    end
+
     it 'keeps a chosen motif all year' do
       expect(symbols(now: Time.utc(2026, 7, 15, 9), fields: { 'motif' => 'autumn' })).to eq(%w[acorn maple])
     end
