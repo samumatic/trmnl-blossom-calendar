@@ -54,8 +54,8 @@ custom_fields:
 - keyname: holidays
   field_type: boolean
   name: Holiday decoration
-  description: 'Stars and candles from 1 to 26 December, eggs and bunnies in the week around Easter, over the motif.'
-  description-de: 'Sterne und Kerzen vom 1. bis 26. Dezember, Eier und Hasen in der Woche um Ostern, statt des Motivs.'
+  description: Stars and candles from 1 to 26 December, eggs and bunnies in the week around Easter, over the motif.
+  description-de: Sterne und Kerzen vom 1. bis 26. Dezember, Eier und Hasen in der Woche um Ostern, statt des Motivs.
   default: 'true'
 - keyname: days_ahead
   field_type: select
