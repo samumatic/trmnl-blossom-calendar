@@ -5,9 +5,10 @@ watch:
   - .trmnlp.yml
   - src
 
-# Preview: example events. Set $TRMNL_ICS_URL to preview a real calendar without touching tracked files.
+# Preview: example events (no calendar chosen). To preview a real calendar plugin, point a merged_plugins entry
+# at a trmnlp project holding its data and set calendar_1 to that entry's name.
 custom_fields:
-  ics_urls: '{{ env.TRMNL_ICS_URL | default: "" }}'
+  calendar_1: ''
   calendar_name: ''
   days_ahead: '7'
   language: Auto

@@ -1,15 +1,49 @@
+{% comment %}
+  Blossom Calendar reads TRMNL's own calendar plugins (Google, Outlook, Apple, CalDAV) through Plugin Merge:
+  TRMNL fetches and expands the calendar, this markup only lays it out. Plugin Merge runs no serverless
+  transform, so everything below is Liquid.
+{% endcomment %}
 {% assign bc_fields = trmnl.plugin_settings.custom_fields_values %}
+
+{% comment %}
+  The chosen calendar plugins. A plugin_instance_select field's own name holds the plugin's data (as Pretty
+  Calendar reads it); where it holds the data's name instead ("caldav_123", as the Plugin Data API names it), that
+  name is looked up. Field names spelled out: TRMNL's publish check looks for each field in the markup.
+{% endcomment %}
+{% assign bc_events = "" | split: "" %}
+{% assign bc_has_source = false %}{% assign bc_has_data = false %}
+{% assign bc_first_day = nil %}{% assign bc_src_clock = "" %}
+{% assign bc_source_fields = "calendar_1,calendar_2,calendar_3" | split: "," %}
+{% for bc_f in bc_source_fields %}
+  {% assign bc_key = bc_fields[bc_f] | default: "" | strip %}
+  {% if bc_key == "" %}{% continue %}{% endif %}
+  {% assign bc_has_source = true %}
+  {% assign bc_src = [bc_f] %}
+  {% if bc_src.events == nil %}{% assign bc_src = [bc_key] %}{% endif %}
+  {% if bc_src.events == nil and bc_src.merge_variables %}{% assign bc_src = bc_src.merge_variables %}{% endif %}
+  {% if bc_src.events %}
+    {% assign bc_has_data = true %}
+    {% assign bc_events = bc_events | concat: bc_src.events %}
+    {% if bc_first_day == nil and bc_src.first_day != nil %}{% assign bc_first_day = bc_src.first_day | plus: 0 %}{% endif %}
+    {% if bc_src_clock == "" and bc_src.time_format %}{% assign bc_src_clock = bc_src.time_format | downcase %}{% endif %}
+  {% endif %}
+{% endfor %}
+{% if bc_first_day == nil %}{% assign bc_first_day = 1 %}{% endif %}
+
 {% assign bc_lang = bc_fields.language | default: "auto" | downcase %}
 {% if bc_lang != "de" and bc_lang != "en" %}
   {% assign bc_locale = trmnl.user.locale | default: "en" | slice: 0, 2 | downcase %}
   {% if bc_locale == "de" %}{% assign bc_lang = "de" %}{% else %}{% assign bc_lang = "en" %}{% endif %}
 {% endif %}
+{% comment %} 12-hour clock: chosen here, else as the calendar plugin shows it ("am/pm"), else by language. {% endcomment %}
 {% assign bc_clock = bc_fields.time_format | default: "auto" | downcase %}
-{% if bc_clock == "12" %}{% assign bc_t = "t12" %}
-{% elsif bc_clock == "24" %}{% assign bc_t = "t24" %}
-{% elsif bc_lang == "en" %}{% assign bc_t = "t12" %}{% else %}{% assign bc_t = "t24" %}{% endif %}
+{% if bc_clock == "12" %}{% assign bc_12 = true %}
+{% elsif bc_clock == "24" %}{% assign bc_12 = false %}
+{% elsif bc_src_clock contains "am" %}{% assign bc_12 = true %}
+{% elsif bc_src_clock != "" %}{% assign bc_12 = false %}
+{% elsif bc_lang == "en" %}{% assign bc_12 = true %}{% else %}{% assign bc_12 = false %}{% endif %}
 
-{% comment %} Words. Weekdays Monday first, as the transform counts them. {% endcomment %}
+{% comment %} Words. Weekdays Monday first. {% endcomment %}
 {% if bc_lang == "de" %}
   {% assign bc_wd_long = "Montag,Dienstag,Mittwoch,Donnerstag,Freitag,Samstag,Sonntag" | split: "," %}
   {% assign bc_wd = "Mo,Di,Mi,Do,Fr,Sa,So" | split: "," %}
@@ -21,9 +55,9 @@
   {% assign bc_w_free = "Heute ist nichts mehr geplant" %}{% assign bc_w_free2 = "Genieß den Tag!" %}
   {% assign bc_w_nothing = "Keine Termine in Sicht" %}
   {% assign bc_w_title = "Mein Kalender" %}{% assign bc_w_demo = "Beispieltermine" %}
-  {% assign bc_w_error = "Der Kalender ist gerade nicht erreichbar" %}
-  {% assign bc_w_error2 = "Prüfe den iCal-Link in den Einstellungen." %}
-  {% assign bc_w_partial = "Ein Kalender fehlt gerade" %}
+  {% assign bc_w_error = "Noch keine Termine vom Kalender-Plugin" %}
+  {% assign bc_w_error2 = "Lass das Kalender-Plugin in einer Playlist (ausgeblendet reicht) und aktualisiere es einmal." %}
+  {% assign bc_demo = "Yoga mit Mia,Brunch bei Oma,Maniküre,Mädelsabend,Geburtstag von Lena,Kino: Liebeskomödie,Wochenmarkt,Picknick im Park,Tanzkurs" | split: "," %}
 {% else %}
   {% assign bc_wd_long = "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday" | split: "," %}
   {% assign bc_wd = "Mon,Tue,Wed,Thu,Fri,Sat,Sun" | split: "," %}
@@ -35,26 +69,130 @@
   {% assign bc_w_free = "Nothing else planned today" %}{% assign bc_w_free2 = "Enjoy your day!" %}
   {% assign bc_w_nothing = "No events coming up" %}
   {% assign bc_w_title = "My Calendar" %}{% assign bc_w_demo = "Example events" %}
-  {% assign bc_w_error = "The calendar can't be reached right now" %}
-  {% assign bc_w_error2 = "Check the iCal link in the plugin settings." %}
-  {% assign bc_w_partial = "One calendar is missing right now" %}
+  {% assign bc_w_error = "No events from the calendar plugin yet" %}
+  {% assign bc_w_error2 = "Keep the calendar plugin in a playlist (hidden is fine) and refresh it once." %}
+  {% assign bc_demo = "Yoga with Mia,Brunch at Grandma's,Manicure,Girls' night,Lena's birthday,Cinema: rom-com,Farmers market,Picnic in the park,Dance class" | split: "," %}
 {% endif %}
 
-{% assign bc_today = cal.today %}
-{% assign bc_mi = bc_today.month | minus: 1 %}
-{% assign bc_weekday = bc_wd_long[bc_today.wd] %}
-{% capture bc_month_year %}{{ bc_mon_long[bc_mi] }} {{ bc_today.year }}{% endcapture %}
+{% comment %} Now, in the account's time zone. Dates are shifted to noon UTC before day arithmetic, so the server's zone can't move them. {% endcomment %}
+{% assign bc_now = trmnl.system.timestamp_utc | plus: trmnl.user.utc_offset %}
+{% assign bc_today_iso = bc_now | date: "%Y-%m-%d" %}
+{% assign bc_now_str = bc_now | date: "%Y-%m-%dT%H:%M" %}
+{% assign bc_today_ts = bc_today_iso | append: "T12:00:00Z" | date: "%s" | plus: 0 %}
+{% assign bc_today_wd = bc_now | date: "%u" | minus: 1 %}
+{% assign bc_today_day = bc_now | date: "%-d" | plus: 0 %}
+{% assign bc_mi = bc_now | date: "%-m" | minus: 1 %}
+{% assign bc_weekday = bc_wd_long[bc_today_wd] %}
+{% capture bc_month_year %}{{ bc_mon_long[bc_mi] }} {{ bc_now | date: "%Y" }}{% endcapture %}
+{% assign bc_days_ahead = bc_fields.days_ahead | default: 7 | plus: 0 %}
+{% if bc_days_ahead < 1 or bc_days_ahead > 14 %}{% assign bc_days_ahead = 7 %}{% endif %}
+
+{% comment %}
+  Every event as one row "key¦first day¦last day¦start¦end¦end day¦title", sorted so all-day events (key A) come
+  first and the rest by start time (key T + HH:MM). Times come straight from the plugin's ISO strings, which are
+  already in the calendar's local time. An all-day event's end date is exclusive; so is a midnight end. The CalDAV
+  plugin flags timed events over several days as all-day but keeps their times: all-day means midnight to midnight.
+{% endcomment %}
+{% assign bc_rows = "" %}
+{% if bc_has_source %}
+  {% for bc_e in bc_events %}
+    {% assign bc_st = bc_e.status | default: "" | downcase %}
+    {% if bc_st == "cancelled" %}{% continue %}{% endif %}
+    {% assign bc_s = bc_e.start_full | default: bc_e.date_time | default: "" | append: "" %}
+    {% if bc_s.size < 10 %}{% continue %}{% endif %}
+    {% assign bc_en = bc_e.end_full | default: bc_s | append: "" %}
+    {% assign bc_sd = bc_s | slice: 0, 10 %}{% assign bc_ed = bc_en | slice: 0, 10 %}
+    {% if bc_s.size > 10 %}{% assign bc_shm = bc_s | slice: 11, 5 %}{% else %}{% assign bc_shm = "00:00" %}{% endif %}
+    {% if bc_en.size > 10 %}{% assign bc_ehm = bc_en | slice: 11, 5 %}{% else %}{% assign bc_ehm = "00:00" %}{% endif %}
+    {% assign bc_allday = false %}
+    {% if bc_s.size == 10 %}{% assign bc_allday = true %}
+    {% elsif bc_e.all_day and bc_shm == "00:00" and bc_ehm == "00:00" %}{% assign bc_allday = true %}{% endif %}
+    {% assign bc_last = bc_ed %}
+    {% if bc_ed > bc_sd and bc_ehm == "00:00" %}{% assign bc_last = bc_ed | append: "T12:00:00Z" | date: "%s" | minus: 86400 | date: "%Y-%m-%d" %}{% endif %}
+    {% if bc_last < bc_sd %}{% assign bc_last = bc_sd %}{% endif %}
+    {% assign bc_title = bc_e.summary | default: "–" | replace: "¦", " " | replace: "§", " " | strip_newlines | strip %}
+    {% capture bc_rows %}{{ bc_rows }}§{% if bc_allday %}A{% else %}T{{ bc_shm }}{% endif %}¦{{ bc_sd }}¦{{ bc_last }}¦{{ bc_shm }}¦{{ bc_ehm }}¦{{ bc_ed }}¦{{ bc_title }}{% endcapture %}
+  {% endfor %}
+{% else %}
+  {% comment %} No calendar chosen: made-up events around today, so the recipe shows what it does (and no one's real data). {% endcomment %}
+  {% assign bc_d0 = bc_today_iso %}
+  {% assign bc_d1 = bc_today_ts | plus: 86400 | date: "%Y-%m-%d" %}{% assign bc_d2 = bc_today_ts | plus: 172800 | date: "%Y-%m-%d" %}
+  {% assign bc_d3 = bc_today_ts | plus: 259200 | date: "%Y-%m-%d" %}{% assign bc_d4 = bc_today_ts | plus: 345600 | date: "%Y-%m-%d" %}
+  {% assign bc_d5 = bc_today_ts | plus: 432000 | date: "%Y-%m-%d" %}{% assign bc_d6 = bc_today_ts | plus: 518400 | date: "%Y-%m-%d" %}
+  {% capture bc_rows %}§T08:00¦{{ bc_d0 }}¦{{ bc_d0 }}¦08:00¦09:00¦{{ bc_d0 }}¦{{ bc_demo[0] }}§T11:30¦{{ bc_d0 }}¦{{ bc_d0 }}¦11:30¦13:00¦{{ bc_d0 }}¦{{ bc_demo[1] }}§T19:00¦{{ bc_d0 }}¦{{ bc_d0 }}¦19:00¦20:00¦{{ bc_d0 }}¦{{ bc_demo[2] }}§T20:00¦{{ bc_d1 }}¦{{ bc_d1 }}¦20:00¦23:00¦{{ bc_d1 }}¦{{ bc_demo[3] }}§A¦{{ bc_d2 }}¦{{ bc_d2 }}¦00:00¦00:00¦{{ bc_d3 }}¦{{ bc_demo[4] }}§T18:30¦{{ bc_d3 }}¦{{ bc_d3 }}¦18:30¦20:30¦{{ bc_d3 }}¦{{ bc_demo[5] }}§T09:00¦{{ bc_d4 }}¦{{ bc_d4 }}¦09:00¦11:00¦{{ bc_d4 }}¦{{ bc_demo[6] }}§T13:00¦{{ bc_d5 }}¦{{ bc_d5 }}¦13:00¦16:00¦{{ bc_d5 }}¦{{ bc_demo[7] }}§T19:00¦{{ bc_d6 }}¦{{ bc_d6 }}¦19:00¦20:30¦{{ bc_d6 }}¦{{ bc_demo[8] }}{% endcapture %}
+{% endif %}
+{% assign bc_rows = bc_rows | split: "§" | sort %}
+
+{% comment %}
+  One pass over the days from the 1st of this month to the end of the agenda: busy days of the month ("|9|") and
+  the agenda as rows, "D¦date¦weekday¦day¦month¦days from today" per day, "E¦kind¦start¦end¦title" per event
+  (kind A all day, P part x of y, R start–end, T at a time, F from, U until) and "N" for a free today.
+{% endcomment %}
+{% assign bc_month_key = bc_today_iso | slice: 0, 7 %}
+{% assign bc_ms_ts = bc_month_key | append: "-01T12:00:00Z" | date: "%s" | plus: 0 %}
+{% assign bc_back = bc_today_ts | minus: bc_ms_ts | divided_by: 86400 %}
+{% assign bc_stop = bc_back | plus: bc_days_ahead | minus: 1 %}
+{% if bc_stop < 30 %}{% assign bc_stop = 30 %}{% endif %}
+{% assign bc_busy = "|" %}{% assign bc_mlen = 0 %}{% assign bc_list = "" %}{% assign bc_count = 0 %}
+{% for bc_i in (0..bc_stop) %}
+  {% assign bc_ts = bc_i | times: 86400 | plus: bc_ms_ts %}
+  {% assign bc_d = bc_ts | date: "%Y-%m-%d" %}
+  {% assign bc_in_month = false %}{% if bc_d contains bc_month_key %}{% assign bc_in_month = true %}{% assign bc_mlen = bc_i | plus: 1 %}{% endif %}
+  {% assign bc_rel = bc_i | minus: bc_back %}
+  {% assign bc_in_window = false %}{% if bc_rel >= 0 and bc_rel < bc_days_ahead %}{% assign bc_in_window = true %}{% endif %}
+  {% unless bc_in_month or bc_in_window %}{% continue %}{% endunless %}
+  {% assign bc_top = "" %}{% assign bc_timed = "" %}{% assign bc_hit = false %}
+  {% for bc_r in bc_rows %}
+    {% if bc_r.size < 5 %}{% continue %}{% endif %}
+    {% assign bc_x = bc_r | split: "¦" %}
+    {% if bc_x[1] > bc_d or bc_d > bc_x[2] %}{% continue %}{% endif %}
+    {% assign bc_hit = true %}
+    {% unless bc_in_window %}{% continue %}{% endunless %}
+    {% if bc_x[0] == "A" %}
+      {% if bc_x[2] > bc_x[1] %}
+        {% assign bc_s_ts = bc_x[1] | append: "T12:00:00Z" | date: "%s" | plus: 0 %}
+        {% assign bc_l_ts = bc_x[2] | append: "T12:00:00Z" | date: "%s" | plus: 0 %}
+        {% assign bc_p = bc_ts | minus: bc_s_ts | divided_by: 86400 | plus: 1 %}
+        {% assign bc_n = bc_l_ts | minus: bc_s_ts | divided_by: 86400 | plus: 1 %}
+        {% capture bc_top %}{{ bc_top }}§E¦P¦{{ bc_p }}¦{{ bc_n }}¦{{ bc_x[6] }}{% endcapture %}
+      {% else %}
+        {% capture bc_top %}{{ bc_top }}§E¦A¦¦¦{{ bc_x[6] }}{% endcapture %}
+      {% endif %}
+    {% else %}
+      {% comment %} Today: what has ended drops off. {% endcomment %}
+      {% if bc_rel == 0 %}{% assign bc_end_str = bc_x[5] | append: "T" | append: bc_x[4] %}{% if bc_end_str <= bc_now_str %}{% continue %}{% endif %}{% endif %}
+      {% if bc_x[1] == bc_d %}
+        {% if bc_x[5] == bc_d and bc_x[3] == bc_x[4] %}{% capture bc_timed %}{{ bc_timed }}§E¦T¦{{ bc_x[3] }}¦¦{{ bc_x[6] }}{% endcapture %}
+        {% elsif bc_x[5] == bc_d %}{% capture bc_timed %}{{ bc_timed }}§E¦R¦{{ bc_x[3] }}¦{{ bc_x[4] }}¦{{ bc_x[6] }}{% endcapture %}
+        {% else %}{% capture bc_timed %}{{ bc_timed }}§E¦F¦{{ bc_x[3] }}¦¦{{ bc_x[6] }}{% endcapture %}{% endif %}
+      {% elsif bc_x[5] == bc_d and bc_x[4] != "00:00" %}{% capture bc_top %}{{ bc_top }}§E¦U¦¦{{ bc_x[4] }}¦{{ bc_x[6] }}{% endcapture %}
+      {% else %}{% capture bc_top %}{{ bc_top }}§E¦A¦¦¦{{ bc_x[6] }}{% endcapture %}{% endif %}
+    {% endif %}
+  {% endfor %}
+  {% if bc_hit and bc_in_month %}{% assign bc_day_n = bc_ts | date: "%-d" %}{% assign bc_busy = bc_busy | append: bc_day_n | append: "|" %}{% endif %}
+  {% if bc_in_window %}
+    {% if bc_top != "" or bc_timed != "" or bc_rel == 0 %}
+      {% assign bc_wdi = bc_ts | date: "%u" | minus: 1 %}{% assign bc_dm = bc_ts | date: "%-m" | minus: 1 %}{% assign bc_dd = bc_ts | date: "%-d" %}
+      {% capture bc_list %}{{ bc_list }}§D¦{{ bc_d }}¦{{ bc_wdi }}¦{{ bc_dd }}¦{{ bc_dm }}¦{{ bc_rel }}{{ bc_top }}{{ bc_timed }}{% if bc_rel == 0 and bc_top == "" and bc_timed == "" %}§N{% endif %}{% endcapture %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% assign bc_list = bc_list | split: "§" %}
+
+{% comment %} "14:30", or "2:30 PM" on a 12-hour clock. {% endcomment %}
+{% template bc_time %}{% if h12 %}{% assign bc_hh = hm | slice: 0, 2 | plus: 0 %}{% assign bc_h = bc_hh | modulo: 12 %}{% if bc_h == 0 %}{% assign bc_h = 12 %}{% endif %}{{ bc_h }}:{{ hm | slice: 3, 2 }} {% if bc_hh < 12 %}AM{% else %}PM{% endif %}{% else %}{{ hm }}{% endif %}{% endtemplate %}
 
 {% comment %} Title bar: a blossom, the title, and a hint when the events are only examples. {% endcomment %}
-{% assign bc_title = bc_fields.calendar_name | strip %}
-{% if bc_title == blank %}{% assign bc_title = bc_w_title %}{% endif %}
+{% assign bc_name = bc_fields.calendar_name | strip %}
+{% if bc_name == blank %}{% assign bc_name = bc_w_title %}{% endif %}
 {% capture bc_title_bar %}
   <div class="title_bar">
     <svg class="w--6 h--6" viewBox="0 0 40 40" aria-hidden="true"><use href="#bc-blossom"/></svg>
-    <span class="title">{{ bc_title | truncate: 40 }}</span>
-    {% if cal.demo %}<span class="instance">{{ bc_w_demo }}</span>{% elsif cal.partial %}<span class="instance">{{ bc_w_partial }}</span>{% endif %}
+    <span class="title">{{ bc_name | truncate: 40 }}</span>
+    {% unless bc_has_source %}<span class="instance">{{ bc_w_demo }}</span>{% endunless %}
   </div>
 {% endcapture %}
+{% assign bc_ok = true %}{% if bc_has_source and bc_has_data == false %}{% assign bc_ok = false %}{% endif %}
 
 {% comment %}
   Drawings, defined once and used by reference. Outlines only, in the page's ink (currentColor), so they stay crisp
@@ -99,7 +237,7 @@
       </g>
     </svg>
     <div class="absolute inset--0 flex flex--col flex--center">
-      <span class="value value--tnums bc-daysize">{{ bc_today.day }}</span>
+      <span class="value value--tnums bc-daysize">{{ bc_today_day }}</span>
     </div>
     <svg class="bc-orn bc-orn--a absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>
     <svg class="bc-orn bc-orn--b absolute" viewBox="0 0 20 20" aria-hidden="true"><use href="#bc-sparkle"/></svg>
@@ -124,38 +262,41 @@
   </svg>
 {% endcapture %}
 
-{% comment %} This month, Monday first: today sits in a heart, days with something on are underlined. {% endcomment %}
+{% comment %} This month, starting on the calendar plugin's first day of the week: today sits in a heart, days with something on are underlined. {% endcomment %}
+{% assign bc_first_u = bc_ms_ts | date: "%u" | modulo: 7 %}
+{% assign bc_lead = bc_first_u | minus: bc_first_day | plus: 7 | modulo: 7 %}
 {% capture bc_month %}
   <div class="bc-month grid grid--cols-7 gap--none">
-    {% for bc_l in bc_wd_one %}<div class="flex flex--center-x flex--center-y"><span class="label label--small lg:label--base bc-month__head">{{ bc_l }}</span></div>{% endfor %}
-    {% for bc_week in cal.month %}{% for bc_c in bc_week %}
-      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_c.d == nil %}{% elsif bc_c.today %}<span class="label label--small lg:label--base relative bc-month__today"><svg class="bc-month__heart absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg>{{ bc_c.d }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_c.busy %} bc-busy{% endif %}">{{ bc_c.d }}</span>{% endif %}</div>
-    {% endfor %}{% endfor %}
+    {% for bc_j in (0..6) %}{% assign bc_k = bc_first_day | plus: bc_j | plus: 6 | modulo: 7 %}<div class="flex flex--center-x flex--center-y"><span class="label label--small lg:label--base bc-month__head">{{ bc_wd_one[bc_k] }}</span></div>{% endfor %}
+    {% if bc_lead > 0 %}{% for bc_j in (1..bc_lead) %}<div class="bc-month__cell"></div>{% endfor %}{% endif %}
+    {% for bc_n in (1..bc_mlen) %}{% capture bc_tag %}|{{ bc_n }}|{% endcapture %}
+      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_n == bc_today_day %}<span class="label label--small lg:label--base relative bc-month__today"><svg class="bc-month__heart absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg>{{ bc_n }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_busy contains bc_tag %} bc-busy{% endif %}">{{ bc_n }}</span>{% endif %}</div>
+    {% endfor %}
   </div>
 {% endcapture %}
 
 {% comment %}
-  The agenda in columns (each view swaps bc-cols for its most columns): a heading per day, then each event with a heart in front and when it happens ("09:00 – 10:00",
-  "ab 22:00", "bis 02:00", "ganztags", "Tag 2 von 3"). Overflow drops what doesn't fit.
+  The agenda in columns (each view swaps bc-cols for its most columns): a heading per day, then each event with a
+  heart in front and when it happens ("09:00 – 10:00", "ab 22:00", "bis 02:00", "ganztags", "Tag 2 von 3").
+  Overflow drops what doesn't fit.
 {% endcomment %}
 {% capture bc_agenda %}
   <div class="columns bc-agenda w--full" data-overflow-max-cols="bc-cols" data-overflow-counter="true">
    <div class="column">
-    {% for bc_d in cal.days %}
-      {% assign bc_dm = bc_d.month | minus: 1 %}
-      <span class="label label--small lg:label--base group-header bc-dayhead" data-group-header="true"><svg class="bc-glyph" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>&nbsp;{% if bc_d.rel == 0 %}{{ bc_w_today }}{% elsif bc_d.rel == 1 %}{{ bc_w_tomorrow }}{% else %}{% if bc_lang == "de" %}{{ bc_wd[bc_d.wd] }} {{ bc_d.day }}. {{ bc_mon[bc_dm] }}{% else %}{{ bc_wd[bc_d.wd] }}, {{ bc_mon[bc_dm] }} {{ bc_d.day }}{% endif %}{% endif %}</span>
-      {% if bc_d.events.size == 0 %}
+    {% for bc_r in bc_list %}{% assign bc_x = bc_r | split: "¦" %}
+      {% if bc_x[0] == "D" %}{% assign bc_wdi = bc_x[2] | plus: 0 %}{% assign bc_dm = bc_x[4] | plus: 0 %}
+        <span class="label label--small lg:label--base group-header bc-dayhead" data-group-header="true"><svg class="bc-glyph" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>&nbsp;{% if bc_x[5] == "0" %}{{ bc_w_today }}{% elsif bc_x[5] == "1" %}{{ bc_w_tomorrow }}{% elsif bc_lang == "de" %}{{ bc_wd[bc_wdi] }} {{ bc_x[3] }}. {{ bc_mon[bc_dm] }}{% else %}{{ bc_wd[bc_wdi] }}, {{ bc_mon[bc_dm] }} {{ bc_x[3] }}{% endif %}</span>
+      {% elsif bc_x[0] == "N" %}
         <div class="item"><div class="content"><span class="description">{{ bc_w_free }} · {{ bc_w_free2 }}</span></div></div>
-      {% endif %}
-      {% for bc_e in bc_d.events %}
+      {% elsif bc_x[0] == "E" %}
         <div class="item bc-item">
           <div class="icon bc-bullet"><svg class="w--full h--full" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg></div>
           <div class="content">
-            <span class="title title--small lg:title--base" data-clamp="1">{{ bc_e.title }}</span>
-            <span class="label label--small lg:label--base bc-when">{% if bc_e.all_day %}{% if bc_e.part %}{{ bc_w_day }} {{ bc_e.part[0] }} {{ bc_w_of }} {{ bc_e.part[1] }}{% else %}{{ bc_w_all_day }}{% endif %}{% elsif bc_e.start and bc_e.end %}{{ bc_e.start[bc_t] }} – {{ bc_e.end[bc_t] }}{% elsif bc_e.start and bc_e.open %}{{ bc_w_from }} {{ bc_e.start[bc_t] }}{% elsif bc_e.start %}{{ bc_e.start[bc_t] }}{% elsif bc_e.end %}{{ bc_w_until }} {{ bc_e.end[bc_t] }}{% endif %}</span>
+            <span class="title title--small lg:title--base" data-clamp="1">{{ bc_x[4] }}</span>
+            <span class="label label--small lg:label--base bc-when">{% case bc_x[1] %}{% when "A" %}{{ bc_w_all_day }}{% when "P" %}{{ bc_w_day }} {{ bc_x[2] }} {{ bc_w_of }} {{ bc_x[3] }}{% when "R" %}{% render "bc_time", hm: bc_x[2], h12: bc_12 %} – {% render "bc_time", hm: bc_x[3], h12: bc_12 %}{% when "F" %}{{ bc_w_from }} {% render "bc_time", hm: bc_x[2], h12: bc_12 %}{% when "U" %}{{ bc_w_until }} {% render "bc_time", hm: bc_x[3], h12: bc_12 %}{% else %}{% render "bc_time", hm: bc_x[2], h12: bc_12 %}{% endcase %}</span>
           </div>
         </div>
-      {% endfor %}
+      {% endif %}
     {% endfor %}
    </div>
   </div>
@@ -165,20 +306,23 @@
 {% assign bc_next_count = 0 %}
 {% capture bc_next %}
   <div class="flex flex--col gap--xsmall w--full" data-overflow="true">
-    {% for bc_d in cal.days %}{% for bc_e in bc_d.events %}{% if bc_next_count < 4 %}{% assign bc_next_count = bc_next_count | plus: 1 %}
-      <div class="item bc-item">
-        <div class="icon bc-bullet"><svg class="w--full h--full" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg></div>
-        <div class="content">
-          <span class="label label--small lg:label--base bc-when">{% if bc_d.rel == 0 %}{% elsif bc_d.rel == 1 %}{{ bc_w_tomorrow }} {% else %}{{ bc_wd[bc_d.wd] }} {% endif %}{% if bc_e.all_day %}{{ bc_w_all_day }}{% elsif bc_e.start %}{{ bc_e.start[bc_t] }}{% elsif bc_e.end %}{{ bc_w_until }} {{ bc_e.end[bc_t] }}{% endif %}</span>
-          <span class="title title--small lg:title--base" data-clamp="1">{{ bc_e.title }}</span>
+    {% for bc_r in bc_list %}{% assign bc_x = bc_r | split: "¦" %}
+      {% if bc_x[0] == "D" %}{% assign bc_day_rel = bc_x[5] %}{% assign bc_day_wd = bc_x[2] | plus: 0 %}
+      {% elsif bc_x[0] == "E" and bc_next_count < 4 %}{% assign bc_next_count = bc_next_count | plus: 1 %}
+        <div class="item bc-item">
+          <div class="icon bc-bullet"><svg class="w--full h--full" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg></div>
+          <div class="content">
+            <span class="label label--small lg:label--base bc-when">{% if bc_day_rel == "1" %}{{ bc_w_tomorrow }} {% elsif bc_day_rel != "0" %}{{ bc_wd[bc_day_wd] }} {% endif %}{% case bc_x[1] %}{% when "A", "P" %}{{ bc_w_all_day }}{% when "U" %}{{ bc_w_until }} {% render "bc_time", hm: bc_x[3], h12: bc_12 %}{% else %}{% render "bc_time", hm: bc_x[2], h12: bc_12 %}{% endcase %}</span>
+            <span class="title title--small lg:title--base" data-clamp="1">{{ bc_x[4] }}</span>
+          </div>
         </div>
-      </div>
-    {% endif %}{% endfor %}{% endfor %}
+      {% endif %}
+    {% endfor %}
     {% if bc_next_count == 0 %}<span class="description">{{ bc_w_nothing }} · {{ bc_w_free2 }}</span>{% endif %}
   </div>
 {% endcapture %}
 
-{% comment %} The link is wrong or the calendar is down: a single drooping blossom and two lines. {% endcomment %}
+{% comment %} A calendar is chosen but its plugin has sent nothing yet: a single drooping blossom and two lines. {% endcomment %}
 {% capture bc_empty %}
   <div class="layout layout--col layout--center gap--small">
     <svg class="w--16 h--16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">

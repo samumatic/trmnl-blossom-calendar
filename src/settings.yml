@@ -1,24 +1,28 @@
 ---
-strategy: polling
+strategy: plugin_merge
 no_screen_padding: 'no'
 dark_mode: 'no'
 static_data: ''
-polling_verb: get
 framework_version: latest
-serverless_language: python
 refresh_interval_floor: '15'
-polling_url: '{{ ics_urls | strip | replace: "webcal://", "https://" | split: "," | first | split: " " | first | strip }}'
-polling_headers: ''
-polling_body: ''
-oauth_enabled: 'false'
-oauth_pkce_enabled: 'no'
 custom_fields:
-- keyname: ics_urls
-  field_type: string
-  name: Calendar link (iCal)
-  description: 'The secret iCal address of your calendar (Google, Apple, Outlook, Proton, Nextcloud). Up to 3 links, separated by commas. Empty: example events.'
-  description-de: 'Die geheime iCal-Adresse deines Kalenders (Google, Apple, Outlook, Proton, Nextcloud). Bis zu 3 Links, mit Kommas getrennt. Leer: Beispieltermine.'
-  placeholder: https://calendar.google.com/calendar/ical/.../basic.ics
+- keyname: calendar_1
+  field_type: plugin_instance_select
+  name: Calendar
+  description: 'One of your TRMNL calendar plugins (Google, Outlook, Apple, CalDAV). Keep it in a playlist so it keeps refreshing; hide it there if it shouldn''t show on its own. It shares the days its own layout shows: pick a week layout there for the whole week. Empty: example events.'
+  description-de: 'Eines deiner TRMNL-Kalender-Plugins (Google, Outlook, Apple, CalDAV). Lass es in einer Playlist, damit es aktuell bleibt; blende es dort aus, wenn es nicht selbst erscheinen soll. Es teilt nur die Tage, die sein eigenes Layout zeigt: dort ein Wochen-Layout wählen. Leer: Beispieltermine.'
+  optional: true
+- keyname: calendar_2
+  field_type: plugin_instance_select
+  name: Calendar 2
+  description: 'Optional: another calendar plugin, shown together with the first.'
+  description-de: 'Optional: ein weiteres Kalender-Plugin, zusammen mit dem ersten angezeigt.'
+  optional: true
+- keyname: calendar_3
+  field_type: plugin_instance_select
+  name: Calendar 3
+  description: 'Optional: a third calendar plugin.'
+  description-de: 'Optional: ein drittes Kalender-Plugin.'
   optional: true
 - keyname: calendar_name
   field_type: string
@@ -50,8 +54,8 @@ custom_fields:
 - keyname: time_format
   field_type: select
   name: Time format
-  description: 'Auto: 24-hour in German, 12-hour in English.'
-  description-de: 'Auto: 24 Stunden auf Deutsch, 12 Stunden auf Englisch.'
+  description: 'Auto: as your calendar plugin shows times, else 24-hour in German, 12-hour in English.'
+  description-de: 'Auto: wie dein Kalender-Plugin die Zeiten zeigt, sonst 24 Stunden auf Deutsch, 12 Stunden auf Englisch.'
   options:
   - Auto: auto
   - 24-hour: '24'
@@ -62,7 +66,7 @@ custom_fields:
   name: About This Plugin
   category: calendar,personal
   github_url: https://github.com/samumatic/trmnl-blossom-calendar
-  description: 'A sweet calendar for your TRMNL: today''s date sits in the middle of a big blossom, little hearts and flowers grow around the edges, and your next appointments follow with a heart in front of each one. Made to look lovely in plain black and white on e-paper, with a small month view where today is a heart and busy days are underlined.<br><br>Add the secret iCal link of your calendar from Google, Apple iCloud, Outlook, Proton or Nextcloud, up to three at once. Repeating events, birthdays, all-day and multi-day events, moved and cancelled dates are all understood. German or English, 24-hour or 12-hour times, three, seven or fourteen days ahead. Without a link it shows made-up example events.<br><br>Source code and bug reports: <a href="https://github.com/samumatic/trmnl-blossom-calendar" class="underline" target="_blank">GitHub</a>'
+  description: 'A sweet calendar for your TRMNL: today''s date sits in the middle of a big blossom, little hearts and flowers grow around the edges, and your next appointments follow with a heart in front of each one. Made to look lovely in plain black and white on e-paper, with a small month view where today is a heart and busy days are underlined.<br><br><b>Setup:</b> connect your calendar with one of TRMNL''s own calendar plugins (Google Calendar, Outlook, Apple Calendar or CalDAV, which also takes any iCal link) and keep it in a playlist, hidden if you like. Give it a week layout, as a calendar plugin only shares the days its layout shows. Then pick it here, up to three at once. German or English, 24-hour or 12-hour times, three, seven or fourteen days ahead. Without a calendar it shows made-up example events.<br><br>Source code and bug reports: <a href="https://github.com/samumatic/trmnl-blossom-calendar" class="underline" target="_blank">GitHub</a>'
 name: Blossom Calendar
 description: Cute calendar with flowers & hearts
 refresh_interval: 60

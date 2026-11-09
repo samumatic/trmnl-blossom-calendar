@@ -2,75 +2,89 @@
 
 # This plugin's tests, run with `trmnlp test` (add `--report report` for a page of every screen it drew).
 # Docs: https://github.com/usetrmnl/trmnlp#testing-plugins
-# The fixture is a made-up calendar: weekly, yearly and monthly repeats, an exception, a moved date, a cancelled
-# event, an Outlook zone name, an event past midnight and a multi-day trip.
+# The calendar data has the shape TRMNL's CalDAV plugin shares through Plugin Merge (as Pretty Calendar reads it):
+# a flat list of events with ISO start_full/end_full in local time. It is made up: an event that already ended, one past
+# midnight that CalDAV flags all-day, a date-only birthday, a midnight-to-midnight trip, a cancelled event.
 RSpec.describe 'Blossom Calendar' do
-  let(:ics) { File.read(File.join(__dir__, 'fixtures', 'example.ics')) }
-  let(:url) { 'https://calendar.example.com/private-abc/basic.ics' }
-  let(:now) { Time.utc(2026, 11, 9, 7) } # Monday 08:00 in Berlin
-  let(:variables) { { 'trmnl' => { 'user' => { 'time_zone_iana' => 'Europe/Berlin', 'locale' => 'de' } } } }
+  def fixture(name) = JSON.parse(File.read(File.join(__dir__, 'fixtures', name)))
 
-  describe 'without a link' do
-    # Every view on TRMNL's devices, a failing API and every select option, checked for page errors and leaked values.
+  let(:now) { Time.utc(2026, 11, 9, 7) } # Monday 08:00 in Berlin
+  let(:variables) { { 'trmnl' => { 'user' => { 'utc_offset' => 3600, 'time_zone_iana' => 'Europe/Berlin', 'locale' => 'de' } } } }
+  let(:caldav) { fixture('caldav.json') }
+
+  def text_of(html) = html.gsub(%r{<(style|script)\b.*?</\1>}m, '').gsub(/<[^>]+>/, ' ').gsub('&nbsp;', ' ').gsub(/\s+/, ' ')
+
+  describe 'without a calendar' do
+    # Every view on TRMNL's devices and every select option, checked for page errors and leaked values.
     it_behaves_like 'a publishable recipe'
 
     it 'shows example events and says so' do
-      cal = trmnl.transform(now:, variables:).data['cal']
-      expect(cal['demo']).to be(true)
-      expect(cal['days'].first['events'].map { it['title'] }).to include('Yoga mit Mia')
+      text = text_of(trmnl.render(now:, variables:).html)
+      expect(text).to include('Beispieltermine', 'Brunch bei Oma', 'Mädelsabend')
     end
   end
 
-  describe 'with a calendar link' do
-    let(:custom_fields) { { 'ics_urls' => url } }
-    let(:mocks) { { url => { body: ics, headers: { 'content-type' => 'text/calendar; charset=utf-8' } } } }
+  describe 'with a calendar plugin' do
+    # TRMNL hands the chosen plugin's data over under its name ("caldav_1"), which the field holds.
+    let(:data) { { 'caldav_1' => caldav } }
+    let(:custom_fields) { { 'calendar_1' => 'caldav_1' } }
 
     it_behaves_like 'a publishable recipe'
 
-    def days = trmnl.transform(now:, mocks:, custom_fields:, variables:).data['cal']['days']
-    def titles(day) = days.find { it['iso'] == day }&.dig('events')&.map { it['title'] }
+    def html(**inputs) = trmnl.render(now:, variables:, data:, custom_fields:, **inputs).html
+    def text(**) = text_of(html(**))
 
-    it 'reads today with times in Berlin, Outlook zones included' do
-      today = days.first
-      expect(today['events'].map { it['title'] }).to eq(['Zahnarzt', 'Yoga, Studio Blume',
-                                                         'Geburtstagsparty mit einem sehr langen Titel, der nicht in eine Zeile passt'])
-      expect(today['events'][0].values_at('start', 'end').map { it['t24'] }).to eq(%w[14:30 15:15])
-      expect(today['events'][2]).to include('open' => true)
+    it 'lists today from now on, with times' do
+      t = text
+      expect(t).to include('Zahnarzt 14:30 – 15:15', 'Yoga, Studio Blume 18:00 – 19:00', 'ab 22:00')
+      expect(t).not_to include('Frühsport')
+      expect(t).not_to include('Beispieltermine')
     end
 
-    it 'repeats, skips and moves events' do
-      expect(titles('2026-11-10')).to eq(['Geburtstag von Emma', 'Geburtstagsparty mit einem sehr langen Titel, der nicht in eine Zeile passt'])
-      expect(titles('2026-11-11')).to be_nil # exception date, nothing else on
-      expect(titles('2026-11-13')).to eq(['Wellness-Wochenende'])
+    it 'carries an event past midnight over, though CalDAV flags it all-day' do
+      expect(text).to include('bis 02:00')
     end
 
-    it 'counts the days of a trip' do
-      trip = days.find { it['iso'] == '2026-11-14' }['events'].first
-      expect(trip['part']).to eq([3, 3])
+    it 'shows all-day and multi-day events' do
+      t = text
+      expect(t).to include('Geburtstag von Emma ganztags', 'Wellness-Wochenende Tag 1 von 3')
     end
 
     it 'leaves out cancelled events' do
-      expect(days.flat_map { it['events'] }.map { it['title'] }).not_to include('Abgesagt')
+      expect(text).not_to include('Abgesagt')
     end
 
-    it 'marks busy days in the month, the last Friday too' do
-      month = trmnl.transform(now:, mocks:, custom_fields:, variables:).data['cal']['month'].flatten
-      busy = month.select { it['busy'] }.map { it['d'] }
-      expect(busy).to include(2, 4, 9, 10, 12, 13, 14, 16, 27)
-      expect(busy).not_to include(11)
-      expect(month.find { it['today'] }['d']).to eq(9)
+    it 'marks busy days of the month and today' do
+      h = html
+      %w[9 10 12 13 14 16 27].each { |d| expect(h).to include(%(bc-busy">#{d}<)).or include(%(</svg>#{d}</span>)) }
+      expect(h).not_to include('bc-busy">11<')
+      expect(h).to include('bc-month__today')
     end
 
-    it 'turns webcal links into https' do
-      fields = { 'ics_urls' => url.sub('https', 'webcal') }
-      requests = trmnl.transform(now:, mocks:, custom_fields: fields, variables:).requests
-      expect(requests.map { it[:url] }).to all(eq(url))
+    it 'follows the plugin\'s 12-hour clock and week start' do
+      us = { 'caldav_1' => caldav.merge('time_format' => 'am/pm', 'first_day' => 0) }
+      t = text_of(trmnl.render(now:, variables:, data: us, custom_fields:).html)
+      expect(t).to include('2:30 PM – 3:15 PM')
+      expect(t).to match(/S M D M D F S/)
     end
 
-    it 'shows a wilted blossom when the calendar is down' do
-      down = { '*' => { status: 404, body: 'Not found' } }
-      expect(trmnl.transform(now:, mocks: down, custom_fields:, variables:).data['cal']).to eq('ok' => false, 'error' => 'fetch')
-      expect(trmnl.render(now:, mocks: down, custom_fields:, variables:)).to have_no_problems
+    it 'reads the data under the field\'s own name too, as Pretty Calendar does' do
+      direct = { 'calendar_1' => caldav }
+      expect(text_of(trmnl.render(now:, variables:, data: direct, custom_fields:).html)).to include('Zahnarzt')
+    end
+
+    it 'joins a second calendar' do
+      second = { 'events' => [{ 'summary' => 'Tanzkurs', 'start_full' => '2026-11-09T17:00:00+01:00',
+                                'end_full' => '2026-11-09T18:00:00+01:00', 'all_day' => false }] }
+      t = text_of(trmnl.render(now:, variables:, data: data.merge('google_calendar_2' => second),
+                               custom_fields: custom_fields.merge('calendar_2' => 'google_calendar_2')).html)
+      expect(t.index('Zahnarzt')).to be < t.index('Tanzkurs')
+      expect(t.index('Tanzkurs')).to be < t.index('Yoga, Studio Blume')
+    end
+
+    it 'says what to do when the plugin has sent nothing yet' do
+      t = text_of(trmnl.render(now:, variables:, data: {}, custom_fields:).html)
+      expect(t).to include('Noch keine Termine vom Kalender-Plugin')
     end
   end
 end

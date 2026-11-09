@@ -19,29 +19,22 @@ A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date i
 - Today's weekday and date in a twelve-petal blossom, with hearts and sparkles around it
 - The month at a glance: today sits in a heart, days with something on are underlined
 - A flower vine, and a heart in front of every event
-- Agenda for the next 3, 7 or 14 days: times, all-day events, multi-day events ("Day 2 of 3"), events past midnight
-- Up to three calendars at once, from any iCal (ICS) link: Google, Apple iCloud, Outlook, Proton, Nextcloud
-- Repeating events (daily, weekly, monthly such as "last Friday", yearly birthdays), skipped and moved dates, cancelled events
-- German or English (or follow the TRMNL account language), 24-hour or 12-hour times
+- Agenda for the next 3, 7 or 14 days: times, all-day events, multi-day events ("Day 2 of 3"), events past midnight; what already ended today drops off
+- Your calendar from TRMNL's own calendar plugins (Google Calendar, Outlook, Apple Calendar, CalDAV with any iCal link), up to three at once
+- German or English (or follow the TRMNL account language), 24-hour or 12-hour times (or as the calendar plugin shows them), the plugin's first day of the week
 - All four TRMNL layouts (full, half horizontal, half vertical, quadrant), adapting to portrait, to TRMNL X and to dark mode
-- Without a link it shows made-up example events
+- Without a calendar it shows made-up example events
 
 ## Setup
 
-Copy the secret iCal address of your calendar into the plugin settings:
-
-- **Google Calendar**: Settings → your calendar → *Integrate calendar* → *Secret address in iCal format*
-- **Apple iCloud**: Calendar app → share the calendar as *Public Calendar*, copy the link (`webcal://` works)
-- **Outlook**: Settings → Calendar → *Shared calendars* → *Publish a calendar* → ICS link
-- **Proton / Nextcloud**: share the calendar by link and copy the ICS address
-
-Several calendars: separate the links with commas.
+1. Connect your calendar with one of TRMNL's calendar plugins: Google Calendar, Outlook, Apple Calendar, or CalDAV (which also takes any iCal link).
+2. Give that plugin a week layout: a calendar plugin only shares the days its own layout shows.
+3. Keep it in a playlist so it keeps refreshing. Hide it there (eye icon) if it shouldn't show on its own.
+4. Install Blossom Calendar and pick the plugin under *Calendar* (and *Calendar 2*, *Calendar 3* for more).
 
 ## How it works
 
-1. A serverless transform fetches the iCal links and reads them with a small parser of its own, so it needs no extra package ([`src/transform.py`](src/transform.py)). TRMNL's polling would read `text/calendar` as JSON and drop it.
-2. It expands repeats for this month and the days ahead, in your TRMNL time zone, and returns the days with their events and the month grid.
-3. The views lay it out with TRMNL's framework classes; the blossom, hearts and vine are inline SVG in the page's ink, so they swap with dark mode ([`src/shared.liquid`](src/shared.liquid)).
+The recipe uses TRMNL's [Plugin Merge](https://help.trmnl.com/en/articles/12306729-using-data-mode-to-redesign-a-native-plugin) strategy, like [Pretty Calendar](https://trmnl.com/recipes/pretty-calendar-210616): TRMNL fetches the calendar, expands repeats and time zones, and hands the chosen plugins' events to this markup. Plugin Merge runs no serverless code, so [`src/shared.liquid`](src/shared.liquid) does the rest in Liquid: it spreads events over the days they cover, works out all-day and multi-day events, marks busy days in the month, and draws the blossom, hearts and vine as inline SVG in the page's ink, so they swap with dark mode.
 
 ## Development
 
@@ -53,7 +46,7 @@ bin/trmnlp lint
 bin/trmnlp test
 ```
 
-The preview shows the example events. With the `trmnl_preview` gem installed, `TRMNL_ICS_URL="https://…"` previews a real calendar without touching tracked files.
+The preview shows the example events. The tests use made-up data in the shape the CalDAV plugin shares ([`tests/fixtures/caldav.json`](tests/fixtures/caldav.json)).
 
 ## License
 

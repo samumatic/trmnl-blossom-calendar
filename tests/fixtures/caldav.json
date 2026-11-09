@@ -1,0 +1,16 @@
+{
+  "first_day": 1,
+  "time_format": "24h",
+  "instance_name": "Calendar",
+  "events": [
+    {"summary": "Frühsport", "start": "07:00", "end": "07:30", "date_time": "2026-11-09T07:00:00+01:00", "start_full": "2026-11-09T07:00:00+01:00", "end_full": "2026-11-09T07:30:00+01:00", "all_day": false, "description": "", "status": "confirmed"},
+    {"summary": "Zahnarzt", "start": "14:30", "end": "15:15", "date_time": "2026-11-09T14:30:00+01:00", "start_full": "2026-11-09T14:30:00+01:00", "end_full": "2026-11-09T15:15:00+01:00", "all_day": false, "description": "", "status": "confirmed"},
+    {"summary": "Yoga, Studio Blume", "start": "18:00", "end": "19:00", "date_time": "2026-11-09T18:00:00+01:00", "start_full": "2026-11-09T18:00:00+01:00", "end_full": "2026-11-09T19:00:00+01:00", "all_day": false, "description": "Matte mitbringen", "status": "confirmed"},
+    {"summary": "Geburtstagsparty mit einem sehr langen Titel, der nicht in eine Zeile passt", "start": "22:00", "end": "02:00", "date_time": "2026-11-09T22:00:00+01:00", "start_full": "2026-11-09T22:00:00+01:00", "end_full": "2026-11-10T02:00:00+01:00", "all_day": true, "description": "", "status": "confirmed"},
+    {"summary": "Abgesagt", "start": "12:00", "end": "13:00", "date_time": "2026-11-10T12:00:00+01:00", "start_full": "2026-11-10T12:00:00+01:00", "end_full": "2026-11-10T13:00:00+01:00", "all_day": false, "description": "", "status": "cancelled"},
+    {"summary": "Geburtstag von Emma", "start_full": "2026-11-10", "end_full": "2026-11-11", "date_time": "2026-11-10T00:00:00+01:00", "all_day": true, "description": "", "status": "confirmed"},
+    {"summary": "Wellness-Wochenende", "start": "00:00", "end": "00:00", "date_time": "2026-11-12T00:00:00+01:00", "start_full": "2026-11-12T00:00:00+01:00", "end_full": "2026-11-15T00:00:00+01:00", "all_day": true, "description": "", "status": "confirmed"},
+    {"summary": "Yoga (verschoben)", "start": "20:00", "end": "21:00", "date_time": "2026-11-16T20:00:00+01:00", "start_full": "2026-11-16T20:00:00+01:00", "end_full": "2026-11-16T21:00:00+01:00", "all_day": false, "description": "", "status": "confirmed"},
+    {"summary": "Buchclub", "start": "19:30", "end": "21:30", "date_time": "2026-11-27T19:30:00+01:00", "start_full": "2026-11-27T19:30:00+01:00", "end_full": "2026-11-27T21:30:00+01:00", "all_day": false, "description": "", "status": "confirmed"}
+  ]
+}
