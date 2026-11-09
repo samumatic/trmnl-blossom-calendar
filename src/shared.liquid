@@ -54,7 +54,7 @@
   {% assign bc_w_from = "ab" %}{% assign bc_w_until = "bis" %}{% assign bc_w_day = "Tag" %}{% assign bc_w_of = "von" %}
   {% assign bc_w_free = "Heute ist nichts mehr geplant" %}{% assign bc_w_free2 = "Genieß den Tag!" %}
   {% assign bc_w_nothing = "Keine Termine in Sicht" %}
-  {% assign bc_w_title = "Mein Kalender" %}{% assign bc_w_demo = "Beispieltermine" %}
+  {% assign bc_w_title = "Mein Kalender" %}{% assign bc_w_demo = "Beispieltermine" %}{% assign bc_w_bday = "Alles Liebe zum Geburtstag!" %}
   {% assign bc_w_error = "Noch keine Termine vom Kalender-Plugin" %}
   {% assign bc_w_error2 = "Lass das Kalender-Plugin in einer Playlist (ausgeblendet reicht) und aktualisiere es einmal." %}
   {% assign bc_demo = "Yoga mit Mia,Brunch bei Oma,Maniküre,Mädelsabend,Geburtstag von Lena,Kino: Liebeskomödie,Wochenmarkt,Picknick im Park,Tanzkurs" | split: "," %}
@@ -68,7 +68,7 @@
   {% assign bc_w_from = "from" %}{% assign bc_w_until = "until" %}{% assign bc_w_day = "Day" %}{% assign bc_w_of = "of" %}
   {% assign bc_w_free = "Nothing else planned today" %}{% assign bc_w_free2 = "Enjoy your day!" %}
   {% assign bc_w_nothing = "No events coming up" %}
-  {% assign bc_w_title = "My Calendar" %}{% assign bc_w_demo = "Example events" %}
+  {% assign bc_w_title = "My Calendar" %}{% assign bc_w_demo = "Example events" %}{% assign bc_w_bday = "Happy birthday!" %}
   {% assign bc_w_error = "No events from the calendar plugin yet" %}
   {% assign bc_w_error2 = "Keep the calendar plugin in a playlist (hidden is fine) and refresh it once." %}
   {% assign bc_demo = "Yoga with Mia,Brunch at Grandma's,Manicure,Girls' night,Lena's birthday,Cinema: rom-com,Farmers market,Picnic in the park,Dance class" | split: "," %}
@@ -107,14 +107,27 @@
   {% endcase %}
 {% endif %}
 {% comment %}
-  Holiday decoration (on unless switched off), over any motif: Advent and Christmas from 1 to 26 December with stars
-  and candles (no snow, so it suits the southern summer too), and Easter from the Monday before to Easter Monday with
-  eggs and bunnies. Western Easter Sunday by the anonymous Gregorian algorithm (Meeus/Jones/Butcher).
+  Holiday decoration (on unless switched off), over any motif, for days most users of TRMNL (mostly US and Europe) keep:
+  Advent and Christmas 1 to 26 December (stars, candles; no snow, so it suits the southern summer too), New Year's Eve
+  and Day (fireworks, four-leaf clover), Valentine's 12 to 14 February (hearts, love letters), Halloween 25 to 31 October
+  (pumpkins, ghosts), Mother's Day (tulips, hearts) and Easter from the Monday before to Easter Monday (eggs, bunnies).
+  Western Easter Sunday by the anonymous Gregorian algorithm (Meeus/Jones/Butcher).
 {% endcomment %}
 {% assign bc_holidays = bc_fields.holidays | default: "true" | append: "" | downcase %}
 {% if bc_holidays != "false" %}
   {% assign bc_mm = bc_now | date: "%-m" | plus: 0 %}{% assign bc_dd = bc_now | date: "%-d" | plus: 0 %}
   {% if bc_mm == 12 and bc_dd <= 26 %}{% assign bc_season = "christmas" %}{% endif %}
+  {% comment %} Liquid reads and/or right to left without precedence: one condition per tag. {% endcomment %}
+  {% if bc_mm == 12 and bc_dd == 31 %}{% assign bc_season = "newyear" %}{% endif %}
+  {% if bc_mm == 1 and bc_dd == 1 %}{% assign bc_season = "newyear" %}{% endif %}
+  {% if bc_mm == 2 and bc_dd >= 12 and bc_dd <= 14 %}{% assign bc_season = "valentine" %}{% endif %}
+  {% if bc_mm == 10 and bc_dd >= 25 %}{% assign bc_season = "halloween" %}{% endif %}
+  {% comment %} Mother's Day: second Sunday in May, as in the US and Germany. {% endcomment %}
+  {% if bc_mm == 5 %}
+    {% assign bc_may1 = bc_now | date: "%Y" | append: "-05-01T12:00:00Z" | date: "%w" | plus: 0 %}
+    {% assign bc_mother = 7 | minus: bc_may1 | modulo: 7 | plus: 8 %}
+    {% if bc_dd == bc_mother %}{% assign bc_season = "mother" %}{% endif %}
+  {% endif %}
   {% assign bc_y = bc_now | date: "%Y" | plus: 0 %}
   {% assign bc_ea = bc_y | modulo: 19 %}{% assign bc_eb = bc_y | divided_by: 100 %}{% assign bc_ec = bc_y | modulo: 100 %}
   {% assign bc_ed = bc_eb | divided_by: 4 %}{% assign bc_ee = bc_eb | modulo: 4 %}
@@ -129,7 +142,22 @@
   {% assign bc_easter_days = bc_easter | date: "%s" | plus: 0 | minus: bc_today_ts | divided_by: 86400 %}
   {% if bc_easter_days <= 6 and bc_easter_days >= -1 %}{% assign bc_season = "easter" %}{% endif %}
 {% endif %}
+{% comment %} Own birthday (optional date field, any year), over everything else; 29 February shows on the 28th in other years. {% endcomment %}
+{% assign bc_bday = bc_fields.birthday | default: "" | strip | slice: 5, 5 %}
+{% assign bc_today_md = bc_now | date: "%m-%d" %}
+{% assign bc_birthday = false %}
+{% if bc_bday != "" %}
+  {% if bc_bday == bc_today_md %}{% assign bc_birthday = true %}{% endif %}
+  {% assign bc_next_md = bc_today_ts | plus: 86400 | date: "%m-%d" %}
+  {% if bc_bday == "02-29" and bc_today_md == "02-28" and bc_next_md == "03-01" %}{% assign bc_birthday = true %}{% endif %}
+{% endif %}
+{% if bc_birthday %}{% assign bc_season = "birthday" %}{% endif %}
 {% case bc_season %}
+  {% when "birthday" %}{% assign bc_sym_a = "#bc-cake" %}{% assign bc_sym_b = "#bc-balloon" %}
+  {% when "newyear" %}{% assign bc_sym_a = "#bc-firework" %}{% assign bc_sym_b = "#bc-clover" %}
+  {% when "valentine" %}{% assign bc_sym_a = "#bc-heart-big" %}{% assign bc_sym_b = "#bc-envelope" %}
+  {% when "halloween" %}{% assign bc_sym_a = "#bc-pumpkin" %}{% assign bc_sym_b = "#bc-ghost" %}
+  {% when "mother" %}{% assign bc_sym_a = "#bc-tulip" %}{% assign bc_sym_b = "#bc-heart-big" %}
   {% when "christmas" %}{% assign bc_sym_a = "#bc-star" %}{% assign bc_sym_b = "#bc-candle" %}
   {% when "easter" %}{% assign bc_sym_a = "#bc-egg" %}{% assign bc_sym_b = "#bc-bunny" %}
   {% when "summer" %}{% assign bc_sym_a = "#bc-sunflower" %}{% assign bc_sym_b = "#bc-cherries" %}
@@ -240,7 +268,7 @@
   <div class="title_bar">
     <svg class="w--6 h--6" viewBox="0 0 40 40" aria-hidden="true"><use href="#bc-daisy"/></svg>
     <span class="title">{{ bc_name | truncate: 40 }}</span>
-    {% unless bc_has_source %}<span class="instance">{{ bc_w_demo }}</span>{% endunless %}
+    {% if bc_birthday %}<span class="instance">{{ bc_w_bday }}</span>{% elsif bc_has_source == false %}<span class="instance">{{ bc_w_demo }}</span>{% endif %}
   </div>
 {% endcapture %}
 {% assign bc_ok = true %}{% if bc_has_source and bc_has_data == false %}{% assign bc_ok = false %}{% endif %}
@@ -319,6 +347,59 @@
       </g>
       <circle cx="-3.2" cy="6.5" r="1.4" fill="currentColor"/><circle cx="3.2" cy="6.5" r="1.4" fill="currentColor"/>
       <path d="M-1.6 10H1.6L0 11.8Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-heart-big" viewBox="-20 -20 40 40">
+      <path d="M0 13C-10 5.5 -14.5 0.5 -14.5 -5.5A7 7 0 0 1 0 -9A7 7 0 0 1 14.5 -5.5C14.5 0.5 10 5.5 0 13Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-7 -7A3.5 3.5 0 0 1 -2.5 -6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="bc-envelope" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <rect x="-15" y="-10" width="30" height="21" rx="2"/><path d="M-15 -9L0 2L15 -9"/>
+      </g>
+      <path d="M0 9C-4.5 5.5 -6.5 3.5 -6.5 1A3 3 0 0 1 0 -0.5A3 3 0 0 1 6.5 1C6.5 3.5 4.5 5.5 0 9Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-firework" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        {% for bc_a in (0..11) %}<path d="M0 -5V-13" transform="rotate({{ bc_a | times: 30 }})"/>{% endfor %}
+      </g>
+      <g fill="currentColor">{% for bc_a in (0..11) %}<circle cy="-16.5" r="1.7" transform="rotate({{ bc_a | times: 30 | plus: 15 }})"/>{% endfor %}<circle r="2.4"/></g>
+    </symbol>
+    <symbol id="bc-clover" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+        {% for bc_a in (0..3) %}<path d="M0 -1C-5 -4.5 -8.5 -7.5 -8.5 -11A4.2 4.2 0 0 1 0 -13A4.2 4.2 0 0 1 8.5 -11C8.5 -7.5 5 -4.5 0 -1Z" transform="rotate({{ bc_a | times: 90 | plus: 45 }})"/>{% endfor %}
+        <path d="M1 1Q5 9 3 17"/>
+      </g>
+    </symbol>
+    <symbol id="bc-pumpkin" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M0 -7C-6 -9.5 -16 -7.5 -16 3C-16 12.5 -8 15.5 0 14.5C8 15.5 16 12.5 16 3C16 -7.5 6 -9.5 0 -7Z"/>
+        <path d="M-5.5 -7.6C-9.5 -1 -9.5 8 -5.5 14.6M5.5 -7.6C9.5 -1 9.5 8 5.5 14.6"/>
+        <path d="M-1 -7.5L0 -14H3L2 -7.4"/>
+      </g>
+      <path d="M3 -12Q9 -16 12 -11Q7 -9 3 -12Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-ghost" viewBox="-20 -20 40 40">
+      <path d="M-11 16V-2C-11 -10 -6 -15 0 -15C6 -15 11 -10 11 -2V16L7.3 12.5L3.7 16L0 12.5L-3.7 16L-7.3 12.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <g fill="currentColor"><ellipse cx="-4" cy="-4" rx="1.8" ry="2.6"/><ellipse cx="4" cy="-4" rx="1.8" ry="2.6"/><ellipse cy="3" rx="1.6" ry="2"/></g>
+    </symbol>
+    <symbol id="bc-tulip" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M-8 -13L-4 -8.5L0 -15L4 -8.5L8 -13C8.5 -3 5 1.5 0 1.5C-5 1.5 -8.5 -3 -8 -13Z"/><path d="M0 1.5V17"/>
+      </g>
+      <path d="M0 14Q-9 12 -11 4Q-3 5.5 0 14Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-cake" viewBox="-20 -20 40 40">
+      <path d="M0 -18Q3.5 -13.5 0 -10.5Q-3.5 -13.5 0 -18Z" fill="currentColor"/>
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M0 -10.5V-6"/><rect x="-9" y="-6" width="18" height="8" rx="1.5"/><rect x="-14" y="2" width="28" height="13" rx="2"/>
+        <path d="M-14 6Q-10.5 9 -7 6T0 6T7 6T14 6"/>
+      </g>
+    </symbol>
+    <symbol id="bc-balloon" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <ellipse cy="-6" rx="9.5" ry="11.5"/><path d="M0 7.5Q-4 11 0 14T0 19"/><path d="M-4.5 -12A6 6 0 0 1 -1 -15" stroke-width="1.6"/>
+      </g>
+      <path d="M0 5.5L-2.5 8H2.5Z" fill="currentColor"/>
     </symbol>
     <symbol id="bc-heart" viewBox="0 0 24 22">
       <path d="M12 21C5 15.5 1 11.6 1 7a5.6 5.6 0 0 1 11-1.6A5.6 5.6 0 0 1 23 7c0 4.6-4 8.5-11 14z" fill="currentColor"/>

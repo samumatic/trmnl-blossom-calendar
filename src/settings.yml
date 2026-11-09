@@ -54,9 +54,15 @@ custom_fields:
 - keyname: holidays
   field_type: boolean
   name: Holiday decoration
-  description: Stars and candles from 1 to 26 December, eggs and bunnies in the week around Easter, over the motif.
-  description-de: Sterne und Kerzen vom 1. bis 26. Dezember, Eier und Hasen in der Woche um Ostern, statt des Motivs.
+  description: 'Over the motif: Advent and Christmas, New Year, Valentine''s Day, Halloween, Mother''s Day and Easter.'
+  description-de: 'Statt des Motivs: Advent und Weihnachten, Silvester und Neujahr, Valentinstag, Halloween, Muttertag und Ostern.'
   default: 'true'
+- keyname: birthday
+  field_type: date
+  name: Your birthday
+  description: 'Optional: on this day cake and balloons, and a birthday greeting. Only the day and month are used.'
+  description-de: 'Optional: an diesem Tag Torte und Luftballons und ein Geburtstagsgruß. Nur Tag und Monat zählen.'
+  optional: true
 - keyname: days_ahead
   field_type: select
   name: Days shown

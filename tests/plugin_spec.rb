@@ -27,7 +27,7 @@ RSpec.describe 'Blossom Calendar' do
   describe 'motif' do
     def symbols(now:, fields: {}, zone: 'Europe/Berlin')
       vars = { 'trmnl' => { 'user' => { 'utc_offset' => 3600, 'time_zone_iana' => zone, 'locale' => 'de' } } }
-      trmnl.render(now:, variables: vars, custom_fields: fields).html.scan(/<use href="#bc-([a-z]+)" x="-17"/).flatten.uniq.sort
+      trmnl.render(now:, variables: vars, custom_fields: fields).html.scan(/<use href="#bc-([a-z-]+)" x="-17"/).flatten.uniq.sort
     end
 
     it 'follows the season by default' do
@@ -53,6 +53,28 @@ RSpec.describe 'Blossom Calendar' do
       expect(symbols(now: Time.utc(2027, 3, 29, 9))).to eq(%w[bunny egg])       # Easter Monday
       expect(symbols(now: Time.utc(2027, 3, 30, 9))).to eq(%w[daisy])
       expect(symbols(now: Time.utc(2026, 4, 5, 9))).to eq(%w[bunny egg])        # Easter Sunday 2026
+    end
+
+    it 'marks New Year, Valentine\'s Day, Halloween and Mother\'s Day' do
+      expect(symbols(now: Time.utc(2026, 12, 31, 9))).to eq(%w[clover firework])
+      expect(symbols(now: Time.utc(2027, 1, 1, 9))).to eq(%w[clover firework])
+      expect(symbols(now: Time.utc(2027, 1, 2, 9))).to eq(%w[holly snowflake])
+      expect(symbols(now: Time.utc(2027, 2, 12, 9))).to eq(%w[envelope heart-big].sort)
+      expect(symbols(now: Time.utc(2027, 2, 15, 9))).to eq(%w[holly snowflake])
+      expect(symbols(now: Time.utc(2026, 10, 25, 9))).to eq(%w[ghost pumpkin])
+      expect(symbols(now: Time.utc(2026, 11, 1, 9))).to eq(%w[acorn maple])
+      expect(symbols(now: Time.utc(2026, 5, 10, 9))).to eq(%w[heart-big tulip])   # second Sunday in May 2026
+      expect(symbols(now: Time.utc(2027, 5, 9, 9))).to eq(%w[heart-big tulip])    # and 2027
+      expect(symbols(now: Time.utc(2026, 5, 3, 9))).to eq(%w[daisy])
+    end
+
+    it 'celebrates the birthday with a greeting, 29 February on the 28th in other years' do
+      html = trmnl.render(now: Time.utc(2026, 6, 3, 9), variables: { 'trmnl' => { 'user' => { 'utc_offset' => 3600, 'locale' => 'de' } } },
+                          custom_fields: { 'birthday' => '1996-06-03' }).html
+      expect(html).to include('Alles Liebe zum Geburtstag!', 'href="#bc-cake"')
+      expect(symbols(now: Time.utc(2026, 2, 28, 9), fields: { 'birthday' => '2000-02-29' })).to eq(%w[balloon cake])
+      expect(symbols(now: Time.utc(2028, 2, 28, 9), fields: { 'birthday' => '2000-02-29' })).to eq(%w[holly snowflake])
+      expect(symbols(now: Time.utc(2028, 2, 29, 9), fields: { 'birthday' => '2000-02-29' })).to eq(%w[balloon cake])
     end
 
     it 'leaves the holidays out when switched off' do
