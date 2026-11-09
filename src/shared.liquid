@@ -187,7 +187,7 @@
 {% if bc_name == blank %}{% assign bc_name = bc_w_title %}{% endif %}
 {% capture bc_title_bar %}
   <div class="title_bar">
-    <svg class="w--6 h--6" viewBox="0 0 40 40" aria-hidden="true"><use href="#bc-blossom"/></svg>
+    <svg class="w--6 h--6" viewBox="0 0 40 40" aria-hidden="true"><use href="#bc-daisy"/></svg>
     <span class="title">{{ bc_name | truncate: 40 }}</span>
     {% unless bc_has_source %}<span class="instance">{{ bc_w_demo }}</span>{% endunless %}
   </div>
@@ -200,15 +200,11 @@
 {% endcomment %}
 <svg class="bc-defs" aria-hidden="true">
   <defs>
-    <symbol id="bc-blossom" viewBox="-20 -20 40 40">
-      <g fill="none" stroke="currentColor" stroke-width="2.4">
-        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7"/>
-        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(72)"/>
-        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(144)"/>
-        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(216)"/>
-        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(288)"/>
+    <symbol id="bc-daisy" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+        {% for bc_a in (0..9) %}<ellipse cx="0" cy="-10" rx="2.6" ry="6.6" transform="rotate({{ bc_a | times: 36 }})"/>{% endfor %}
       </g>
-      <circle r="4.6" fill="currentColor"/>
+      <circle r="4.2" fill="currentColor"/>
     </symbol>
     <symbol id="bc-heart" viewBox="0 0 24 22">
       <path d="M12 21C5 15.5 1 11.6 1 7a5.6 5.6 0 0 1 11-1.6A5.6 5.6 0 0 1 23 7c0 4.6-4 8.5-11 14z" fill="currentColor"/>
@@ -216,37 +212,34 @@
     <symbol id="bc-heart-o" viewBox="0 0 24 22">
       <path d="M12 19.6C5.6 14.6 2.2 11.1 2.2 7a4.5 4.5 0 0 1 8.9-1.3h1.8A4.5 4.5 0 0 1 21.8 7c0 4.1-3.4 7.6-9.8 12.6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
     </symbol>
-    <symbol id="bc-sparkle" viewBox="0 0 20 20">
-      <path d="M10 0Q11 9 20 10Q11 11 10 20Q9 11 0 10Q9 9 10 0z" fill="currentColor"/>
-    </symbol>
     <symbol id="bc-leaf" viewBox="0 0 20 12">
       <path d="M1 6Q10 -3 19 6Q10 15 1 6z" fill="currentColor"/>
     </symbol>
   </defs>
 </svg>
 
-{% comment %} Today's date in the middle of a big twelve-petal blossom, with hearts and sparkles around it. Each view swaps
-   bc-daysize for its value size classes (a capture can't take arguments). {% endcomment %}
+{% comment %}
+  Today's date in a wreath: a ring of leaves on a thin vine with six daisies. Each view swaps bc-daysize for its
+  value size classes (a capture can't take arguments). stroke="none" on the uses keeps the ring's stroke off the
+  filled leaves and daisy hearts.
+{% endcomment %}
 {% capture bc_bloom %}
   <div class="bc-bloom relative flex-none">
     <svg class="absolute inset--0 w--full h--full" viewBox="-100 -100 200 200" aria-hidden="true">
       <g fill="none" stroke="currentColor" stroke-width="3">
-        {% for bc_a in (0..11) %}<ellipse cx="0" cy="-72" rx="16.5" ry="25" transform="rotate({{ bc_a | times: 30 }})"/>{% endfor %}
+        <circle r="72" stroke-width="1.8"/>
+        {% for bc_a in (0..17) %}{% assign bc_m = bc_a | modulo: 3 %}{% if bc_m != 0 %}{% assign bc_side = bc_a | modulo: 2 %}<g transform="rotate({{ bc_a | times: 20 }})"><use href="#bc-leaf" x="-10" y="{% if bc_side == 0 %}-84{% else %}-72{% endif %}" width="20" height="12" stroke="none" transform="rotate({% if bc_side == 0 %}-24{% else %}24{% endif %} 0 -72)"/></g>{% endif %}{% endfor %}
+        {% for bc_a in (0..5) %}<g transform="rotate({{ bc_a | times: 60 }})"><use href="#bc-daisy" x="-17" y="-89" width="34" height="34" stroke="none"/></g>{% endfor %}
         <circle r="46"/>
-        <circle r="39" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
       </g>
     </svg>
     <div class="absolute inset--0 flex flex--col flex--center">
       <span class="value value--tnums bc-daysize">{{ bc_today_day }}</span>
     </div>
-    <svg class="bc-orn bc-orn--a absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>
-    <svg class="bc-orn bc-orn--b absolute" viewBox="0 0 20 20" aria-hidden="true"><use href="#bc-sparkle"/></svg>
-    <svg class="bc-orn bc-orn--c absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg>
-    <svg class="bc-orn bc-orn--d absolute" viewBox="0 0 20 20" aria-hidden="true"><use href="#bc-sparkle"/></svg>
   </div>
 {% endcapture %}
 
-{% comment %} A flower vine: a wavy stem with leaves, three blossoms and two hearts. {% endcomment %}
+{% comment %} A flower vine: a wavy stem with leaves and three daisies. {% endcomment %}
 {% capture bc_vine %}
   <svg class="bc-vine w--full" viewBox="0 0 320 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
     <path d="M4 30C40 12 70 42 110 26S180 8 214 26S286 40 316 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -254,11 +247,9 @@
     <use href="#bc-leaf" x="84" y="30" width="18" height="11" transform="rotate(20 93 35)"/>
     <use href="#bc-leaf" x="186" y="6" width="18" height="11" transform="rotate(-20 195 11)"/>
     <use href="#bc-leaf" x="248" y="30" width="18" height="11" transform="rotate(25 257 35)"/>
-    <use href="#bc-blossom" x="50" y="10" width="30" height="30"/>
-    <use href="#bc-heart" x="126" y="14" width="14" height="13"/>
-    <use href="#bc-blossom" x="146" y="2" width="38" height="38"/>
-    <use href="#bc-heart-o" x="222" y="18" width="16" height="15"/>
-    <use href="#bc-blossom" x="274" y="6" width="30" height="30"/>
+    <use href="#bc-daisy" x="50" y="10" width="30" height="30"/>
+    <use href="#bc-daisy" x="146" y="2" width="38" height="38"/>
+    <use href="#bc-daisy" x="274" y="6" width="30" height="30"/>
   </svg>
 {% endcapture %}
 
@@ -334,8 +325,18 @@
   </div>
 {% endcapture %}
 
+{% comment %}
+  The weekday in Pacifico, a round script that stays legible on 1-bit screens; asked for over TRMNL's own fonts (a deliberate exception to "use the provided
+  fonts"; Pretty Calendar loads a Google font the same way). display=block: the renderer waits for it.
+{% endcomment %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=block" rel="stylesheet">
 <style>
   /* Custom CSS only where Framework 3.4 has no class; each block says what is missing. */
+  /* Script font for the weekday: the Framework has no font-family classes beyond its own fonts. Pacifico has one
+     weight; 700 draws it a little heavier (synthetic bold), which keeps it solid on 1-bit screens. */
+  .bc-script{font-family:"Pacifico",cursive;font-weight:700;line-height:1.25}
   /* The symbol sheet takes no room: no class hides an element while keeping its defs usable (hidden = display:none breaks <use> in some renderers). */
   .bc-defs{position:absolute;width:0;height:0;overflow:hidden}
   /* Blossom sizes per view and screen: above w--[128px], the largest arbitrary size, and they form one table. */
@@ -345,12 +346,6 @@
   .screen--lg .bc-bloom{width:300px;height:300px}
   .screen--lg .view--half_horizontal .bc-bloom,.screen--lg .view--half_vertical .bc-bloom{width:220px;height:220px}
   .screen--lg .view--quadrant .bc-bloom{width:190px;height:190px}
-  /* Ornaments around the blossom, placed in % of its size: no fractional inset utilities. */
-  .bc-orn{width:12%;height:12%}
-  .bc-orn--a{right:-2%;top:2%}
-  .bc-orn--b{left:-1%;top:6%;width:10%;height:10%}
-  .bc-orn--c{left:0;bottom:4%}
-  .bc-orn--d{right:2%;bottom:2%;width:8%;height:8%}
   /* The vine keeps its drawn proportions: Framework heights are fixed steps. */
   .bc-vine{height:auto;max-height:44px}
   .screen--lg .bc-vine{max-height:88px}

@@ -2,7 +2,7 @@
 
 # Blossom Calendar
 
-A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date in the middle of a big blossom, little hearts and flowers around it, and the coming appointments with a heart in front of each one. Drawn in plain black and white, so it looks lovely on 1-bit screens too.
+A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date in a wreath of leaves and daisies, the weekday in a round script, a daisy vine, and the coming appointments with a heart in front of each one. Drawn in plain black and white, so it looks lovely on 1-bit screens too.
 
 ![Full layout](docs/full.png)
 
@@ -16,9 +16,9 @@ A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date i
 
 ## Features
 
-- Today's weekday and date in a twelve-petal blossom, with hearts and sparkles around it
+- Today's date in a wreath of leaves and six daisies, the weekday in [Pacifico](https://fonts.google.com/specimen/Pacifico) script
 - The month at a glance: today sits in a heart, days with something on are underlined
-- A flower vine, and a heart in front of every event
+- A daisy vine, and a heart in front of every event
 - Agenda for the next 3, 7 or 14 days: times, all-day events, multi-day events ("Day 2 of 3"), events past midnight; what already ended today drops off
 - Your calendar from TRMNL's own calendar plugins (Google Calendar, Outlook, Apple Calendar, CalDAV with any iCal link), up to three at once
 - German or English (or follow the TRMNL account language), 24-hour or 12-hour times (or as the calendar plugin shows them), the plugin's first day of the week
@@ -34,7 +34,7 @@ A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date i
 
 ## How it works
 
-The recipe uses TRMNL's [Plugin Merge](https://help.trmnl.com/en/articles/12306729-using-data-mode-to-redesign-a-native-plugin) strategy, like [Pretty Calendar](https://trmnl.com/recipes/pretty-calendar-210616): TRMNL fetches the calendar, expands repeats and time zones, and hands the chosen plugins' events to this markup. Plugin Merge runs no serverless code, so [`src/shared.liquid`](src/shared.liquid) does the rest in Liquid: it spreads events over the days they cover, works out all-day and multi-day events, marks busy days in the month, and draws the blossom, hearts and vine as inline SVG in the page's ink, so they swap with dark mode.
+The recipe uses TRMNL's [Plugin Merge](https://help.trmnl.com/en/articles/12306729-using-data-mode-to-redesign-a-native-plugin) strategy, like [Pretty Calendar](https://trmnl.com/recipes/pretty-calendar-210616): TRMNL fetches the calendar, expands repeats and time zones, and hands the chosen plugins' events to this markup. Plugin Merge runs no serverless code, so [`src/shared.liquid`](src/shared.liquid) does the rest in Liquid: it spreads events over the days they cover, works out all-day and multi-day events, marks busy days in the month, and draws the wreath, daisies, hearts and vine as inline SVG in the page's ink, so they swap with dark mode.
 
 ## Development
 
