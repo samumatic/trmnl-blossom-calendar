@@ -1,0 +1,68 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: latest
+serverless_language: python
+refresh_interval_floor: '15'
+polling_url: '{{ ics_urls | strip | replace: "webcal://", "https://" | split: "," | first | split: " " | first | strip }}'
+polling_headers: ''
+polling_body: ''
+oauth_enabled: 'false'
+oauth_pkce_enabled: 'no'
+custom_fields:
+- keyname: ics_urls
+  field_type: string
+  name: Calendar link (iCal)
+  description: 'The secret iCal address of your calendar (Google, Apple, Outlook, Proton, Nextcloud). Up to 3 links, separated by commas. Empty: example events.'
+  description-de: 'Die geheime iCal-Adresse deines Kalenders (Google, Apple, Outlook, Proton, Nextcloud). Bis zu 3 Links, mit Kommas getrennt. Leer: Beispieltermine.'
+  placeholder: https://calendar.google.com/calendar/ical/.../basic.ics
+  optional: true
+- keyname: calendar_name
+  field_type: string
+  name: Title
+  description: 'Shown in the title bar. Empty: My calendar.'
+  description-de: 'Steht in der Titelleiste. Leer: Mein Kalender.'
+  placeholder: Lenas Kalender
+  optional: true
+- keyname: days_ahead
+  field_type: select
+  name: Days shown
+  description: How many days the agenda looks ahead.
+  description-de: Wie viele Tage die Terminliste vorausschaut.
+  options:
+  - '3': '3'
+  - '7': '7'
+  - '14': '14'
+  default: '7'
+- keyname: language
+  field_type: select
+  name: Language
+  description: Auto follows the language of your TRMNL account.
+  description-de: Auto folgt der Sprache deines TRMNL-Kontos.
+  options:
+  - Auto: auto
+  - Deutsch: de
+  - English: en
+  default: auto
+- keyname: time_format
+  field_type: select
+  name: Time format
+  description: 'Auto: 24-hour in German, 12-hour in English.'
+  description-de: 'Auto: 24 Stunden auf Deutsch, 12 Stunden auf Englisch.'
+  options:
+  - Auto: auto
+  - 24-hour: '24'
+  - 12-hour: '12'
+  default: auto
+- keyname: about
+  field_type: author_bio
+  name: About This Plugin
+  category: calendar,personal
+  github_url: https://github.com/samumatic/trmnl-blossom-calendar
+  description: 'A sweet calendar for your TRMNL: today''s date sits in the middle of a big blossom, little hearts and flowers grow around the edges, and your next appointments follow with a heart in front of each one. Made to look lovely in plain black and white on e-paper, with a small month view where today is a heart and busy days are underlined.<br><br>Add the secret iCal link of your calendar from Google, Apple iCloud, Outlook, Proton or Nextcloud, up to three at once. Repeating events, birthdays, all-day and multi-day events, moved and cancelled dates are all understood. German or English, 24-hour or 12-hour times, three, seven or fourteen days ahead. Without a link it shows made-up example events.<br><br>Source code and bug reports: <a href="https://github.com/samumatic/trmnl-blossom-calendar" class="underline" target="_blank">GitHub</a>'
+name: Blossom Calendar
+description: Cute calendar with flowers & hearts
+refresh_interval: 60

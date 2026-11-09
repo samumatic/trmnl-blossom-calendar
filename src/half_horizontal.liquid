@@ -1,0 +1,12 @@
+{% if cal.ok %}
+<div class="layout layout--row portrait:layout--col layout--top gap--medium">
+  <div class="flex flex--col flex--center-x gap--xsmall flex-none">
+    {{ bc_bloom | replace: "bc-daysize", "value--large lg:value--xxlarge" }}
+    <span class="label lg:label--large">{{ bc_weekday }}</span>
+  </div>
+  <div class="grow w--full bc-main">{{ bc_agenda | replace: "bc-cols", "2" }}</div>
+</div>
+{% else %}
+{{ bc_empty }}
+{% endif %}
+{{ bc_title_bar }}

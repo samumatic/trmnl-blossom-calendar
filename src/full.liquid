@@ -1,0 +1,19 @@
+{% if cal.ok %}
+<div class="layout layout--row portrait:layout--col layout--top gap--large">
+  <div class="bc-card flex flex--col portrait:flex--row flex--center-x gap--small portrait:gap--large flex-none">
+    <div class="flex flex--col flex--center-x gap--xsmall flex-none">
+      <span class="title lg:title--xlarge">{{ bc_weekday }}</span>
+      {{ bc_bloom | replace: "bc-daysize", "value--xlarge lg:value--xxxlarge" }}
+      <span class="label lg:label--large">{{ bc_month_year }}</span>
+    </div>
+    <div class="flex flex--col gap--small grow bc-card__side">
+      {{ bc_month }}
+      {{ bc_vine }}
+    </div>
+  </div>
+  <div class="grow w--full bc-main">{{ bc_agenda | replace: "bc-cols", "1" }}</div>
+</div>
+{% else %}
+{{ bc_empty }}
+{% endif %}
+{{ bc_title_bar }}

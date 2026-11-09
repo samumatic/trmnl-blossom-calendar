@@ -1,0 +1,237 @@
+{% assign bc_fields = trmnl.plugin_settings.custom_fields_values %}
+{% assign bc_lang = bc_fields.language | default: "auto" | downcase %}
+{% if bc_lang != "de" and bc_lang != "en" %}
+  {% assign bc_locale = trmnl.user.locale | default: "en" | slice: 0, 2 | downcase %}
+  {% if bc_locale == "de" %}{% assign bc_lang = "de" %}{% else %}{% assign bc_lang = "en" %}{% endif %}
+{% endif %}
+{% assign bc_clock = bc_fields.time_format | default: "auto" | downcase %}
+{% if bc_clock == "12" %}{% assign bc_t = "t12" %}
+{% elsif bc_clock == "24" %}{% assign bc_t = "t24" %}
+{% elsif bc_lang == "en" %}{% assign bc_t = "t12" %}{% else %}{% assign bc_t = "t24" %}{% endif %}
+
+{% comment %} Words. Weekdays Monday first, as the transform counts them. {% endcomment %}
+{% if bc_lang == "de" %}
+  {% assign bc_wd_long = "Montag,Dienstag,Mittwoch,Donnerstag,Freitag,Samstag,Sonntag" | split: "," %}
+  {% assign bc_wd = "Mo,Di,Mi,Do,Fr,Sa,So" | split: "," %}
+  {% assign bc_wd_one = "M,D,M,D,F,S,S" | split: "," %}
+  {% assign bc_mon_long = "Januar,Februar,März,April,Mai,Juni,Juli,August,September,Oktober,November,Dezember" | split: "," %}
+  {% assign bc_mon = "Jan.,Feb.,März,Apr.,Mai,Juni,Juli,Aug.,Sep.,Okt.,Nov.,Dez." | split: "," %}
+  {% assign bc_w_today = "Heute" %}{% assign bc_w_tomorrow = "Morgen" %}{% assign bc_w_all_day = "ganztags" %}
+  {% assign bc_w_from = "ab" %}{% assign bc_w_until = "bis" %}{% assign bc_w_day = "Tag" %}{% assign bc_w_of = "von" %}
+  {% assign bc_w_free = "Heute ist nichts mehr geplant" %}{% assign bc_w_free2 = "Genieß den Tag!" %}
+  {% assign bc_w_nothing = "Keine Termine in Sicht" %}
+  {% assign bc_w_title = "Mein Kalender" %}{% assign bc_w_demo = "Beispieltermine" %}
+  {% assign bc_w_error = "Der Kalender ist gerade nicht erreichbar" %}
+  {% assign bc_w_error2 = "Prüfe den iCal-Link in den Einstellungen." %}
+  {% assign bc_w_partial = "Ein Kalender fehlt gerade" %}
+{% else %}
+  {% assign bc_wd_long = "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday" | split: "," %}
+  {% assign bc_wd = "Mon,Tue,Wed,Thu,Fri,Sat,Sun" | split: "," %}
+  {% assign bc_wd_one = "M,T,W,T,F,S,S" | split: "," %}
+  {% assign bc_mon_long = "January,February,March,April,May,June,July,August,September,October,November,December" | split: "," %}
+  {% assign bc_mon = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec" | split: "," %}
+  {% assign bc_w_today = "Today" %}{% assign bc_w_tomorrow = "Tomorrow" %}{% assign bc_w_all_day = "all day" %}
+  {% assign bc_w_from = "from" %}{% assign bc_w_until = "until" %}{% assign bc_w_day = "Day" %}{% assign bc_w_of = "of" %}
+  {% assign bc_w_free = "Nothing else planned today" %}{% assign bc_w_free2 = "Enjoy your day!" %}
+  {% assign bc_w_nothing = "No events coming up" %}
+  {% assign bc_w_title = "My Calendar" %}{% assign bc_w_demo = "Example events" %}
+  {% assign bc_w_error = "The calendar can't be reached right now" %}
+  {% assign bc_w_error2 = "Check the iCal link in the plugin settings." %}
+  {% assign bc_w_partial = "One calendar is missing right now" %}
+{% endif %}
+
+{% assign bc_today = cal.today %}
+{% assign bc_mi = bc_today.month | minus: 1 %}
+{% assign bc_weekday = bc_wd_long[bc_today.wd] %}
+{% capture bc_month_year %}{{ bc_mon_long[bc_mi] }} {{ bc_today.year }}{% endcapture %}
+
+{% comment %} Title bar: a blossom, the title, and a hint when the events are only examples. {% endcomment %}
+{% assign bc_title = bc_fields.calendar_name | strip %}
+{% if bc_title == blank %}{% assign bc_title = bc_w_title %}{% endif %}
+{% capture bc_title_bar %}
+  <div class="title_bar">
+    <svg class="w--6 h--6" viewBox="0 0 40 40" aria-hidden="true"><use href="#bc-blossom"/></svg>
+    <span class="title">{{ bc_title | truncate: 40 }}</span>
+    {% if cal.demo %}<span class="instance">{{ bc_w_demo }}</span>{% elsif cal.partial %}<span class="instance">{{ bc_w_partial }}</span>{% endif %}
+  </div>
+{% endcapture %}
+
+{% comment %}
+  Drawings, defined once and used by reference. Outlines only, in the page's ink (currentColor), so they stay crisp
+  on 1-bit screens and swap with dark mode; petals are spaced so their outlines never cross.
+{% endcomment %}
+<svg class="bc-defs" aria-hidden="true">
+  <defs>
+    <symbol id="bc-blossom" viewBox="-20 -20 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2.4">
+        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7"/>
+        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(72)"/>
+        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(144)"/>
+        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(216)"/>
+        <ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(288)"/>
+      </g>
+      <circle r="4.6" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-heart" viewBox="0 0 24 22">
+      <path d="M12 21C5 15.5 1 11.6 1 7a5.6 5.6 0 0 1 11-1.6A5.6 5.6 0 0 1 23 7c0 4.6-4 8.5-11 14z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-heart-o" viewBox="0 0 24 22">
+      <path d="M12 19.6C5.6 14.6 2.2 11.1 2.2 7a4.5 4.5 0 0 1 8.9-1.3h1.8A4.5 4.5 0 0 1 21.8 7c0 4.1-3.4 7.6-9.8 12.6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="bc-sparkle" viewBox="0 0 20 20">
+      <path d="M10 0Q11 9 20 10Q11 11 10 20Q9 11 0 10Q9 9 10 0z" fill="currentColor"/>
+    </symbol>
+    <symbol id="bc-leaf" viewBox="0 0 20 12">
+      <path d="M1 6Q10 -3 19 6Q10 15 1 6z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+{% comment %} Today's date in the middle of a big twelve-petal blossom, with hearts and sparkles around it. Each view swaps
+   bc-daysize for its value size classes (a capture can't take arguments). {% endcomment %}
+{% capture bc_bloom %}
+  <div class="bc-bloom relative flex-none">
+    <svg class="absolute inset--0 w--full h--full" viewBox="-100 -100 200 200" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="3">
+        {% for bc_a in (0..11) %}<ellipse cx="0" cy="-72" rx="16.5" ry="25" transform="rotate({{ bc_a | times: 30 }})"/>{% endfor %}
+        <circle r="46"/>
+        <circle r="39" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <div class="absolute inset--0 flex flex--col flex--center">
+      <span class="value value--tnums bc-daysize">{{ bc_today.day }}</span>
+    </div>
+    <svg class="bc-orn bc-orn--a absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>
+    <svg class="bc-orn bc-orn--b absolute" viewBox="0 0 20 20" aria-hidden="true"><use href="#bc-sparkle"/></svg>
+    <svg class="bc-orn bc-orn--c absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg>
+    <svg class="bc-orn bc-orn--d absolute" viewBox="0 0 20 20" aria-hidden="true"><use href="#bc-sparkle"/></svg>
+  </div>
+{% endcapture %}
+
+{% comment %} A flower vine: a wavy stem with leaves, three blossoms and two hearts. {% endcomment %}
+{% capture bc_vine %}
+  <svg class="bc-vine w--full" viewBox="0 0 320 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <path d="M4 30C40 12 70 42 110 26S180 8 214 26S286 40 316 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <use href="#bc-leaf" x="26" y="13" width="18" height="11" transform="rotate(-25 35 18)"/>
+    <use href="#bc-leaf" x="84" y="30" width="18" height="11" transform="rotate(20 93 35)"/>
+    <use href="#bc-leaf" x="186" y="6" width="18" height="11" transform="rotate(-20 195 11)"/>
+    <use href="#bc-leaf" x="248" y="30" width="18" height="11" transform="rotate(25 257 35)"/>
+    <use href="#bc-blossom" x="50" y="10" width="30" height="30"/>
+    <use href="#bc-heart" x="126" y="14" width="14" height="13"/>
+    <use href="#bc-blossom" x="146" y="2" width="38" height="38"/>
+    <use href="#bc-heart-o" x="222" y="18" width="16" height="15"/>
+    <use href="#bc-blossom" x="274" y="6" width="30" height="30"/>
+  </svg>
+{% endcapture %}
+
+{% comment %} This month, Monday first: today sits in a heart, days with something on are underlined. {% endcomment %}
+{% capture bc_month %}
+  <div class="bc-month grid grid--cols-7 gap--none">
+    {% for bc_l in bc_wd_one %}<div class="flex flex--center-x flex--center-y"><span class="label label--small lg:label--base bc-month__head">{{ bc_l }}</span></div>{% endfor %}
+    {% for bc_week in cal.month %}{% for bc_c in bc_week %}
+      <div class="flex flex--center-x flex--center-y bc-month__cell">{% if bc_c.d == nil %}{% elsif bc_c.today %}<span class="label label--small lg:label--base relative bc-month__today"><svg class="bc-month__heart absolute" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg>{{ bc_c.d }}</span>{% else %}<span class="label label--small lg:label--base{% if bc_c.busy %} bc-busy{% endif %}">{{ bc_c.d }}</span>{% endif %}</div>
+    {% endfor %}{% endfor %}
+  </div>
+{% endcapture %}
+
+{% comment %}
+  The agenda in columns (each view swaps bc-cols for its most columns): a heading per day, then each event with a heart in front and when it happens ("09:00 – 10:00",
+  "ab 22:00", "bis 02:00", "ganztags", "Tag 2 von 3"). Overflow drops what doesn't fit.
+{% endcomment %}
+{% capture bc_agenda %}
+  <div class="columns bc-agenda w--full" data-overflow-max-cols="bc-cols" data-overflow-counter="true">
+   <div class="column">
+    {% for bc_d in cal.days %}
+      {% assign bc_dm = bc_d.month | minus: 1 %}
+      <span class="label label--small lg:label--base group-header bc-dayhead" data-group-header="true"><svg class="bc-glyph" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart"/></svg>&nbsp;{% if bc_d.rel == 0 %}{{ bc_w_today }}{% elsif bc_d.rel == 1 %}{{ bc_w_tomorrow }}{% else %}{% if bc_lang == "de" %}{{ bc_wd[bc_d.wd] }} {{ bc_d.day }}. {{ bc_mon[bc_dm] }}{% else %}{{ bc_wd[bc_d.wd] }}, {{ bc_mon[bc_dm] }} {{ bc_d.day }}{% endif %}{% endif %}</span>
+      {% if bc_d.events.size == 0 %}
+        <div class="item"><div class="content"><span class="description">{{ bc_w_free }} · {{ bc_w_free2 }}</span></div></div>
+      {% endif %}
+      {% for bc_e in bc_d.events %}
+        <div class="item bc-item">
+          <div class="icon bc-bullet"><svg class="w--full h--full" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg></div>
+          <div class="content">
+            <span class="title title--small lg:title--base" data-clamp="1">{{ bc_e.title }}</span>
+            <span class="label label--small lg:label--base bc-when">{% if bc_e.all_day %}{% if bc_e.part %}{{ bc_w_day }} {{ bc_e.part[0] }} {{ bc_w_of }} {{ bc_e.part[1] }}{% else %}{{ bc_w_all_day }}{% endif %}{% elsif bc_e.start and bc_e.end %}{{ bc_e.start[bc_t] }} – {{ bc_e.end[bc_t] }}{% elsif bc_e.start and bc_e.open %}{{ bc_w_from }} {{ bc_e.start[bc_t] }}{% elsif bc_e.start %}{{ bc_e.start[bc_t] }}{% elsif bc_e.end %}{{ bc_w_until }} {{ bc_e.end[bc_t] }}{% endif %}</span>
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+   </div>
+  </div>
+{% endcapture %}
+
+{% comment %} The next few events in one line each, for the smallest view. {% endcomment %}
+{% assign bc_next_count = 0 %}
+{% capture bc_next %}
+  <div class="flex flex--col gap--xsmall w--full" data-overflow="true">
+    {% for bc_d in cal.days %}{% for bc_e in bc_d.events %}{% if bc_next_count < 4 %}{% assign bc_next_count = bc_next_count | plus: 1 %}
+      <div class="item bc-item">
+        <div class="icon bc-bullet"><svg class="w--full h--full" viewBox="0 0 24 22" aria-hidden="true"><use href="#bc-heart-o"/></svg></div>
+        <div class="content">
+          <span class="label label--small lg:label--base bc-when">{% if bc_d.rel == 0 %}{% elsif bc_d.rel == 1 %}{{ bc_w_tomorrow }} {% else %}{{ bc_wd[bc_d.wd] }} {% endif %}{% if bc_e.all_day %}{{ bc_w_all_day }}{% elsif bc_e.start %}{{ bc_e.start[bc_t] }}{% elsif bc_e.end %}{{ bc_w_until }} {{ bc_e.end[bc_t] }}{% endif %}</span>
+          <span class="title title--small lg:title--base" data-clamp="1">{{ bc_e.title }}</span>
+        </div>
+      </div>
+    {% endif %}{% endfor %}{% endfor %}
+    {% if bc_next_count == 0 %}<span class="description">{{ bc_w_nothing }} · {{ bc_w_free2 }}</span>{% endif %}
+  </div>
+{% endcapture %}
+
+{% comment %} The link is wrong or the calendar is down: a single drooping blossom and two lines. {% endcomment %}
+{% capture bc_empty %}
+  <div class="layout layout--col layout--center gap--small">
+    <svg class="w--16 h--16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">
+      <path d="M22 60C22 46 26 36 38 30"/><path d="M26 48Q16 44 14 36Q24 38 26 48z" fill="currentColor"/>
+      <g transform="translate(44 22) rotate(30)"><ellipse cx="0" cy="-10.5" rx="5.2" ry="7"/><ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(72)"/><ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(144)"/><ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(216)"/><ellipse cx="0" cy="-10.5" rx="5.2" ry="7" transform="rotate(288)"/><circle r="4.6" fill="currentColor"/></g>
+    </svg>
+    <span class="title text--center">{{ bc_w_error }}</span>
+    <span class="description text--center">{{ bc_w_error2 }}</span>
+  </div>
+{% endcapture %}
+
+<style>
+  /* Custom CSS only where Framework 3.4 has no class; each block says what is missing. */
+  /* The symbol sheet takes no room: no class hides an element while keeping its defs usable (hidden = display:none breaks <use> in some renderers). */
+  .bc-defs{position:absolute;width:0;height:0;overflow:hidden}
+  /* Blossom sizes per view and screen: above w--[128px], the largest arbitrary size, and they form one table. */
+  .bc-bloom{width:150px;height:150px}
+  .view--half_horizontal .bc-bloom,.view--half_vertical .bc-bloom{width:110px;height:110px}
+  .view--quadrant .bc-bloom{width:96px;height:96px}
+  .screen--lg .bc-bloom{width:300px;height:300px}
+  .screen--lg .view--half_horizontal .bc-bloom,.screen--lg .view--half_vertical .bc-bloom{width:220px;height:220px}
+  .screen--lg .view--quadrant .bc-bloom{width:190px;height:190px}
+  /* Ornaments around the blossom, placed in % of its size: no fractional inset utilities. */
+  .bc-orn{width:12%;height:12%}
+  .bc-orn--a{right:-2%;top:2%}
+  .bc-orn--b{left:-1%;top:6%;width:10%;height:10%}
+  .bc-orn--c{left:0;bottom:4%}
+  .bc-orn--d{right:2%;bottom:2%;width:8%;height:8%}
+  /* The vine keeps its drawn proportions: Framework heights are fixed steps. */
+  .bc-vine{height:auto;max-height:44px}
+  .screen--lg .bc-vine{max-height:88px}
+  /* Month grid: today's heart is a cell of the grid's own height; no square-cell utility. */
+  /* Today's heart centred behind the number, sized to the label's font: no centring transform or em sizes in the Framework. */
+  .bc-month__heart{width:1.9em;height:1.75em;left:50%;top:50%;transform:translate(-50%,-50%)}
+  .bc-month__today{font-weight:700}
+  /* Rows tall enough for today's heart: Framework heights are fixed px, the heart follows the label's font. */
+  .bc-month__cell{min-height:1.55em}
+  .bc-month__head{font-weight:700}
+  /* Busy days underlined under the digits only: label--underline draws across the whole cell, so a week turns into one rule. */
+  .bc-busy{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  /* Inline glyph in a label sized to its font: Framework sizes are fixed px and the pixel fonts have no heart. */
+  .bc-glyph{display:inline;width:.8em;height:.75em;vertical-align:baseline}
+  /* Heart bullets in front of events: the item icon slot sizes images, not inline SVG. */
+  .bc-bullet{width:16px;height:15px;flex:none}
+  .screen--lg .bc-bullet{width:28px;height:26px}
+  /* "9:00 AM – 10:00 AM" stays on one line: no no-wrap text class. */
+  .bc-when{white-space:nowrap}
+  /* Left card width per screen: w--[Npx] stops at 128px. */
+  .bc-card{width:240px}
+  .screen--lg .bc-card{width:470px}
+  .screen--portrait .view--full .bc-card{width:100%}
+  /* Beside the blossom in portrait, under it in landscape: no responsive width-full utility, and min-width:0 lets it shrink. */
+  .bc-card__side{width:100%;min-width:0}
+  /* The agenda takes the height left over, in a row and in a column: no align-self or min-height utilities. */
+  .bc-main{align-self:stretch;min-height:0;min-width:0}
+</style>

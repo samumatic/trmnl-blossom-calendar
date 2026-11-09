@@ -1,0 +1,19 @@
+# TRMNLP configuration
+# {{ env.VARIABLE }} interpolation is available here
+---
+watch:
+  - .trmnlp.yml
+  - src
+
+# Preview: example events. Set $TRMNL_ICS_URL to preview a real calendar without touching tracked files.
+custom_fields:
+  ics_urls: '{{ env.TRMNL_ICS_URL | default: "" }}'
+  calendar_name: ''
+  days_ahead: '7'
+  language: Auto
+  time_format: Auto
+
+time_zone: Europe/Berlin
+
+variables:
+  trmnl: {}
