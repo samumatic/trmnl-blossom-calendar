@@ -1,5 +1,3 @@
-<img src="docs/icon.svg" alt="Blossom Calendar icon" width="88" align="right">
-
 # Blossom Calendar
 
 A sweet calendar for [TRMNL](https://trmnl.com) e-paper displays: today's date in a wreath of leaves and seasonal flowers, the weekday in a round script, a matching vine, and the coming appointments with a heart in front of each one. Drawn in plain black and white, so it looks lovely on 1-bit screens too.
