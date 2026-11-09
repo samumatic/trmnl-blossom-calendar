@@ -3,9 +3,16 @@ strategy: plugin_merge
 no_screen_padding: 'no'
 dark_mode: 'no'
 static_data: ''
+polling_verb: get
 framework_version: latest
+serverless_language: ''
 refresh_interval_floor: '15'
+polling_url: ''
+polling_headers: ''
+polling_body: ''
 id: 536455
+oauth_enabled: 'false'
+oauth_pkce_enabled: 'no'
 custom_fields:
 - keyname: calendar_1
   field_type: plugin_instance_select
