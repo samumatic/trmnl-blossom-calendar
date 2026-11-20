@@ -1,4 +1,4 @@
-# Working on this plugin
+# Contributing
 
 A TRMNL recipe: `src/` holds the markup (one file per view plus `shared.liquid`), `tests/` the specs `bin/trmnlp test` runs.
 
@@ -27,8 +27,3 @@ TRMNL plugins: change it in all of them.
 
 Edits made in TRMNL's editor (by Samu or a reviewer) arrive as "Updated from TRMNL" commits from trmnl-sync on
 `main`. Pull before starting work. These commits may rewrite files with CRLF line endings; keep the endings a file has.
-
-## Commits and pull requests
-
-No AI attribution anywhere: no Co-Authored-By or session trailers, no "Generated with" lines, no tool names in branch
-names. Commits are authored by Samu.
