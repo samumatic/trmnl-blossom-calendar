@@ -566,6 +566,10 @@
   /* Heart bullets in front of events: the item icon slot sizes images, not inline SVG. */
   .bc-bullet{width:16px;height:15px;flex:none}
   .screen--lg .bc-bullet{width:28px;height:26px}
+  /* An event title ends in an ellipsis, also a single word longer than the line: a flex item is never narrower than its
+     longest word (min-width:auto), and the Framework has no min-width class. */
+  .bc-item .content{min-width:0}
+  .bc-item .title{max-width:100%;overflow-wrap:anywhere}
   /* "9:00 AM – 10:00 AM" stays on one line: no no-wrap text class. */
   .bc-when{white-space:nowrap}
   /* Left card width per screen: w--[Npx] stops at 128px. */
@@ -574,6 +578,10 @@
   .screen--portrait .view--full .bc-card{width:100%}
   /* Beside the blossom in portrait, under it in landscape: no responsive width-full utility, and min-width:0 lets it shrink. */
   .bc-card__side{width:100%;min-width:0}
+  /* A month of six weeks still fits: the card stops at the layout's height and the vine gives up the room it needs.
+     min-height:0 lets a flex item shrink below its content; no Framework class does. */
+  .bc-card{max-height:100%}
+  .bc-card__side,.bc-vine{min-height:0}
   /* The agenda takes the height left over, in a row and in a column: no align-self or min-height utilities. */
   .bc-main{align-self:stretch;min-height:0;min-width:0}
 </style>

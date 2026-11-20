@@ -1,0 +1,47 @@
+{
+ "first_day": 1,
+ "time_format": "am/pm",
+ "instance_name": "Calendar",
+ "events": [
+  {
+   "summary": "Elternabend in der Grundschule am Lindenplatz mit Wahl der neuen Klassensprecher",
+   "start_full": "2026-11-09T10:30:00+01:00",
+   "end_full": "2026-11-09T11:45:00+01:00",
+   "all_day": false,
+   "description": "",
+   "status": "confirmed"
+  },
+  {
+   "summary": "Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz",
+   "start_full": "2026-11-09T12:15:00+01:00",
+   "end_full": "2026-11-09T13:00:00+01:00",
+   "all_day": false,
+   "description": "",
+   "status": "confirmed"
+  },
+  {
+   "summary": "Kinderarzt",
+   "start_full": "2026-11-09T16:00:00+01:00",
+   "end_full": "2026-11-09T16:30:00+01:00",
+   "all_day": false,
+   "description": "",
+   "status": "confirmed"
+  },
+  {
+   "summary": "Weiterbildung Projektmanagement im Konferenzzentrum am Hauptbahnhof",
+   "start_full": "2026-11-10T00:00:00+01:00",
+   "end_full": "2026-11-24T00:00:00+01:00",
+   "all_day": true,
+   "description": "",
+   "status": "confirmed"
+  },
+  {
+   "summary": "Abendessen mit den Nachbarn aus dem dritten Stock und ihren Kindern",
+   "start_full": "2026-11-10T19:30:00+01:00",
+   "end_full": "2026-11-10T23:45:00+01:00",
+   "all_day": false,
+   "description": "",
+   "status": "confirmed"
+  }
+ ]
+}
