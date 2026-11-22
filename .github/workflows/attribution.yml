@@ -1,0 +1,42 @@
+name: Attribution
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+  push:
+    branches: [main]
+
+jobs:
+  no-ai-attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: No AI attribution in the PR, its commits or its branch name
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
+        run: |
+          pattern='Generated (with|by) \[?Claude|Co-Authored-By: *Claude|Claude-Session:|noreply@anthropic\.com|claude\.ai/code|claude-projects-attribution|Requested by \*\*'
+          fail=0
+          if printf '%s' "$PR_BODY" | grep -Eiq "$pattern"; then
+            echo "::error::The PR description contains AI attribution:"
+            printf '%s\n' "$PR_BODY" | grep -Ein "$pattern"
+            fail=1
+          fi
+          if printf '%s' "$PR_HEAD" | grep -iq claude; then
+            echo "::error::The branch name contains \"claude\": $PR_HEAD"
+            fail=1
+          fi
+          if [ -n "$BASE_SHA" ] && [ "$BASE_SHA" != 0000000000000000000000000000000000000000 ]; then
+            for c in $(git rev-list "$BASE_SHA..$HEAD_SHA"); do
+              if git log -1 --format='%an <%ae>%n%cn <%ce>%n%B' "$c" | grep -Eiq "$pattern"; then
+                echo "::error::Commit $c contains AI attribution:"
+                git log -1 --format='%an <%ae>%n%cn <%ce>%n%B' "$c" | grep -Ein "$pattern"
+                fail=1
+              fi
+            done
+          fi
+          exit $fail
